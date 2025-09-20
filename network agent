@@ -1,0 +1,158 @@
+import bluetooth
+from bluetooth.ble import DiscoveryService
+import logging
+from google.cloud import aiplatform
+from vertexai.language_models import TextGenerationModel
+import vertexai
+from scapy.all import *
+from flask import Flask, jsonify
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# --- Class Definitions ---
+
+class BluetoothScanner:
+    """Scans for both Bluetooth Classic and Bluetooth Low Energy devices."""
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
+    def scan_bluetooth_classic(self):
+        try:
+            devices = bluetooth.discover_devices(
+                duration=8,
+                lookup_names=True,
+                lookup_class=True
+            )
+            return [{
+                'address': addr,
+                'name': name,
+                'class': dev_class
+            } for addr, name, dev_class in devices]
+        except Exception as e:
+            self.logger.error(f"Bluetooth classic scan error: {str(e)}")
+            return []
+
+    def scan_bluetooth_le(self):
+        try:
+            service = DiscoveryService()
+            devices = service.discover(2)
+            return [{
+                'address': addr,
+                'name': name
+            } for addr, name in devices.items()]
+        except Exception as e:
+            self.logger.error(f"Bluetooth LE scan error: {str(e)}")
+            return []
+
+class WifiScanner:
+    """Scans for Wi-Fi cameras based on SSID patterns."""
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        
+    def scan_wifi_cameras(self, interface="wlan0"):
+        try:
+            cameras = []
+            
+            def packet_handler(pkt):
+                if pkt.haslayer(Dot11):
+                    if pkt.type == 0 and pkt.subtype == 8:  # Beacon frame
+                        if pkt.info:  # SSID
+                            ssid = pkt.info.decode('utf-8', errors='ignore')
+                            # Check for common camera SSID patterns
+                            if any(cam_pattern in ssid.lower() for cam_pattern in 
+                                ['cam', 'ipcam', 'camera', 'webcam']):
+                                cameras.append({
+                                    'ssid': ssid,
+                                    'bssid': pkt.addr2,
+                                    'signal_strength': -(256-ord(pkt[Dot11Beacon].network_stats().get("signal", 0)))
+                                })
+            
+            # Monitor mode might be required
+            sniff(iface=interface, prn=packet_handler, timeout=10)
+            return cameras
+            
+        except Exception as e:
+            self.logger.error(f"WiFi camera scan error: {str(e)}")
+            return []
+
+class GeminiAIAnalyzer:
+    """Uses Gemini-Pro to analyze network data and provide recommendations."""
+    def __init__(self, project_id, location):
+        vertexai.init(project=project_id, location=location)
+        self.model = TextGenerationModel.from_pretrained("gemini-pro")
+        
+    async def analyze_network_data(self, network_data):
+        prompt = f"""
+        Analyze the following network data and provide insights:
+        Network Devices: {network_data['devices']}
+        Signal Strengths: {network_data['signals']}
+        Traffic Patterns: {network_data['traffic']}
+        """
+        response = await self.model.predict_async(prompt)
+        return response.text
+
+    async def generate_security_recommendations(self, scan_results):
+        prompt = f"""
+        Based on the network scan results, provide security recommendations:
+        {scan_results}
+        """
+        response = await self.model.predict_async(prompt)
+        return response.text
+        
+class NetworkScanner:
+    """A placeholder for a class that scans the network for devices."""
+    def scan_network(self, ip_range):
+        # Placeholder for actual network scanning logic (e.g., using nmap or arp-scan)
+        # This function would return a list of devices on the network.
+        return [{"ip": "192.168.1.5", "mac": "00:11:22:33:44:55", "hostname": "my-device"}]
+
+# --- Flask Application ---
+
+app = Flask(__name__)
+ai_analyzer = GeminiAIAnalyzer(project_id="your-project-id", location="us-central1")
+
+@app.route('/api/analyze/network')
+async def analyze_network():
+    """API endpoint to trigger network analysis."""
+    try:
+        network_scanner = NetworkScanner()
+        bluetooth_scanner = BluetoothScanner()
+        wifi_scanner = WifiScanner()
+        
+        # Collect data
+        network_data = network_scanner.scan_network("192.168.1.0/24")
+        bluetooth_data = bluetooth_scanner.scan_bluetooth_classic()
+        wifi_data = wifi_scanner.scan_wifi_cameras()
+        
+        # Combine and format data for AI analysis
+        combined_data = {
+            'devices': network_data,
+            'signals': {
+                'bluetooth': bluetooth_data,
+                'wifi_cameras': wifi_data
+            },
+            'traffic': {} # Placeholder for traffic patterns
+        }
+        
+        # Analyze with Gemini AI
+        analysis = await ai_analyzer.analyze_network_data(combined_data)
+        
+        # Generate security recommendations
+        security_recommendations = await ai_analyzer.generate_security_recommendations(analysis)
+        
+        return jsonify({
+            "success": True,
+            "analysis": analysis,
+            "security_recommendations": security_recommendations
+        })
+    except Exception as e:
+        logging.error(f"API endpoint error: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# --- Main Entry Point ---
+
+if __name__ == '__main__':
+    # For local development, use a development server
+    app.run(debug=True, host='0.0.0.0', port=5000)
+

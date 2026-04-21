@@ -102,21 +102,31 @@ class GeminiAIAnalyzer:
         
 class NetworkScanner:
     """A placeholder for a class that scans the network for devices."""
+
+    def __init__(self):
+        self._known_devices = set()
+
     def scan_network(self, ip_range):
         # Placeholder for actual network scanning logic (e.g., using nmap or arp-scan)
         # This function would return a list of devices on the network.
-        return [{"ip": "192.168.1.5", "mac": "00:11:22:33:44:55", "hostname": "my-device"}]
+        devices = [{"ip": "192.168.1.5", "mac": "00:11:22:33:44:55", "hostname": "my-device"}]
+        for device in devices:
+            mac = device.get("mac")
+            if mac not in self._known_devices:
+                device["color"] = "blue"
+                self._known_devices.add(mac)
+        return devices
 
 # --- Flask Application ---
 
 app = Flask(__name__)
 ai_analyzer = GeminiAIAnalyzer(project_id="your-project-id", location="us-central1")
+network_scanner = NetworkScanner()
 
 @app.route('/api/analyze/network')
 async def analyze_network():
     """API endpoint to trigger network analysis."""
     try:
-        network_scanner = NetworkScanner()
         bluetooth_scanner = BluetoothScanner()
         wifi_scanner = WifiScanner()
         

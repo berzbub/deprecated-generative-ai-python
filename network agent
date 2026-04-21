@@ -123,6 +123,28 @@ app = Flask(__name__)
 ai_analyzer = GeminiAIAnalyzer(project_id="your-project-id", location="us-central1")
 network_scanner = NetworkScanner()
 
+@app.route('/api/help')
+def help():
+    """API endpoint that describes available endpoints."""
+    return jsonify({
+        "endpoints": [
+            {
+                "path": "/api/help",
+                "method": "GET",
+                "description": "Returns a list of available API endpoints and their descriptions."
+            },
+            {
+                "path": "/api/analyze/network",
+                "method": "GET",
+                "description": (
+                    "Scans the local network, Bluetooth, and Wi-Fi cameras, then uses "
+                    "Gemini AI to analyze the collected data and generate security recommendations."
+                )
+            }
+        ]
+    })
+
+
 @app.route('/api/analyze/network')
 async def analyze_network():
     """API endpoint to trigger network analysis."""

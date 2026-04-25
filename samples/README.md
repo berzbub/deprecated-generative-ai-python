@@ -20,6 +20,7 @@ Each file is structured as a runnable test case, ensuring that samples are execu
 | [files.py](./files.py)                                   | Managing files with the File API |
 | [function_calling.py](./function_calling.py)             | Using function calling |
 | [models.py](./models.py)                                 | Listing models and model metadata |
+| [rfid_vehicle_safety.py](./rfid_vehicle_safety.py)       | RFID-based vehicle occupancy tracking with AI safety reminders |
 | [safety_settings.py](./safety_settings.py)               | Setting and using safety controls |
 | [system_instruction.py](./system_instruction.py)         | Setting system instructions |
 | [text_generation.py](./text_generation.py)               | Generating text |

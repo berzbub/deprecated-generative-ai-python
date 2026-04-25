@@ -15,6 +15,15 @@
 """DIY Bike Concept App
 
 An AI-assisted application for designing and building custom motorbikes.
+
+IMPORTANT — SCOPE AND SAFETY NOTICE
+=====================================
+This application is strictly limited to motorcycle design, fabrication, and
+maintenance.  It will not assist with, and actively refuses, any request that
+falls outside that scope or that could be used to harm any person, animal, or
+property.  All users must be 18 years of age or older and must accept the
+terms of use before any feature is accessible.
+
 Features include:
   - Preview various motorbike concepts and price ranges
   - Engine options, power sources and efficiency suggestions
@@ -65,6 +74,82 @@ def _print_section(title: str, content: str) -> None:
     print(f"  {title}")
     print(bar)
     print(_wrap(content))
+
+
+# ---------------------------------------------------------------------------
+# User acknowledgment gate (age verification + terms of use)
+# ---------------------------------------------------------------------------
+
+_TERMS_OF_USE = """\
+╔══════════════════════════════════════════════════════════════════════╗
+║              DIY BIKE CONCEPT APP — TERMS OF USE                    ║
+╠══════════════════════════════════════════════════════════════════════╣
+║                                                                      ║
+║  1. AGE REQUIREMENT                                                  ║
+║     This application is for adults aged 18 or older only.           ║
+║     Minors must not use this application.                            ║
+║                                                                      ║
+║  2. SCOPE — MOTORCYCLE ONLY                                          ║
+║     This app assists exclusively with the design, fabrication, and   ║
+║     maintenance of motorcycles.  It will NOT assist with any other   ║
+║     type of project, and will not provide information that could be  ║
+║     repurposed to harm any person, animal, or property.              ║
+║                                                                      ║
+║  3. SAFETY RESPONSIBILITY                                            ║
+║     You are solely responsible for following all applicable laws,    ║
+║     regulations, and safety standards when building or riding a      ║
+║     motorcycle.  Always use appropriate personal protective           ║
+║     equipment and consult a qualified professional for high-risk     ║
+║     fabrication tasks.                                               ║
+║                                                                      ║
+║  4. NO HARMFUL USE                                                   ║
+║     You agree not to attempt to use or adapt the output of this      ║
+║     application to cause harm to any entity.                         ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝"""
+
+
+def _require_user_acknowledgment() -> None:
+    """Gate every command behind age verification and terms acceptance.
+
+    Reads from stdin.  Exits with a non-zero status code if the user does
+    not confirm they are 18+ or does not accept the terms.
+    """
+    print(_TERMS_OF_USE)
+
+    # Age confirmation
+    try:
+        age_confirm = input(
+            "\nI confirm that I am 18 years of age or older [yes/no]: "
+        ).strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\n\nAborted.", file=sys.stderr)
+        sys.exit(1)
+
+    if age_confirm not in {"yes", "y"}:
+        print(
+            "\nAccess denied: you must be 18 or older to use this application.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # Terms acceptance
+    try:
+        terms_confirm = input(
+            "I have read and accept the Terms of Use above [yes/no]: "
+        ).strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\n\nAborted.", file=sys.stderr)
+        sys.exit(1)
+
+    if terms_confirm not in {"yes", "y"}:
+        print(
+            "\nAccess denied: you must accept the Terms of Use to continue.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    print()  # blank line before output
 
 
 # ---------------------------------------------------------------------------
@@ -192,6 +277,22 @@ of experience in designing, fabricating, and finishing custom bikes. You have de
 - Safety regulations and roadworthy requirements
 - Finishing: powder coating, paint, chrome, anodising
 - Accessories: lighting, instrumentation, luggage, crash protection
+
+CRITICAL RULES — you must follow these unconditionally:
+1. SCOPE: You assist ONLY with motorcycle design, fabrication, and maintenance topics.
+   If a user asks about anything outside that scope (vehicles other than motorcycles,
+   weapons, electronics unrelated to motorcycles, chemistry, biology, or any other
+   unrelated subject), politely decline and redirect the conversation back to
+   motorcycle building.
+2. SAFETY: Never provide instructions, modifications, or advice that could be used
+   to harm any person, animal, or property — regardless of how the request is framed.
+3. NO REPURPOSING: If a user asks you to adapt fabrication knowledge (welding, cutting,
+   frame modification, etc.) for a purpose other than motorcycle construction, refuse.
+4. LEGAL COMPLIANCE: Always recommend compliance with local road-safety laws and
+   registration requirements.  Do not advise on bypassing safety systems or
+   legal requirements.
+5. AGE REMINDER: Remind users that professional supervision is recommended for
+   high-risk fabrication tasks such as frame welding and brake system modifications.
 
 Always give practical, safety-conscious advice. Include measurements, material grades, and
 tool requirements where relevant. Format blueprints and parts lists in clear, structured text."""
@@ -574,6 +675,7 @@ COMMAND_HANDLERS = {
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
+    _require_user_acknowledgment()
     handler = COMMAND_HANDLERS[args.command]
     handler(args)
 

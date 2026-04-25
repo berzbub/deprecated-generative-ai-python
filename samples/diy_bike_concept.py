@@ -443,7 +443,6 @@ Pre-ride safety check and first-start procedure."""
 def cmd_design(args: argparse.Namespace) -> None:  # noqa: ARG001
     """Interactive AI-assisted custom bike designer (chat session)."""
     model = _get_model()
-    import google.generativeai as genai  # noqa: PLC0415, F401
 
     print("\n🏗️  DIY BIKE DESIGNER — Interactive Mode")
     print("=" * 70)

@@ -157,8 +157,8 @@ def create_app(api_key=None):
             )
             response = model.generate_content(prompt)
             return jsonify({"analysis": response.text})
-        except Exception as e:  # pylint: disable=broad-except
-            return jsonify({"error": f"Analysis failed: {e}"}), 500
+        except Exception:  # pylint: disable=broad-except
+            return jsonify({"error": "Analysis failed. Check server logs for details."}), 500
 
     # [END network_agent_create_app]
     return app
@@ -210,5 +210,7 @@ if __name__ == "__main__":
     import os
 
     app = create_app(api_key=os.environ.get("GOOGLE_API_KEY"))
-    # Bind to all interfaces so any device on the same network can reach it.
+    # Bind to all interfaces so any device on the same local network can reach
+    # it via a phone browser.  For production deployments use a WSGI server
+    # (e.g. gunicorn) behind a reverse proxy with authentication.
     app.run(host="0.0.0.0", port=5000)

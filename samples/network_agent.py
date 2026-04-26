@@ -93,7 +93,7 @@ _MOBILE_TEMPLATE = """<!DOCTYPE html>
       const btn = document.getElementById('btn');
       const result = document.getElementById('result');
       btn.disabled = true;
-      result.textContent = 'Analyzing…';
+      result.textContent = 'Analyzing\u2026';
       try {
         const res = await fetch('/api/analyze', {
           method: 'POST',
@@ -148,14 +148,17 @@ def create_app(api_key=None):
         if not data:
             return jsonify({"error": "No network data provided."}), 400
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        prompt = (
-            "You are a network security assistant. "
-            "Analyze the following network description and provide clear, "
-            "concise security recommendations:\n\n" + data
-        )
-        response = model.generate_content(prompt)
-        return jsonify({"analysis": response.text})
+        try:
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            prompt = (
+                "You are a network security assistant. "
+                "Analyze the following network description and provide clear, "
+                "concise security recommendations:\n\n" + data
+            )
+            response = model.generate_content(prompt)
+            return jsonify({"analysis": response.text})
+        except Exception as e:  # pylint: disable=broad-except
+            return jsonify({"error": f"Analysis failed: {e}"}), 500
 
     # [END network_agent_create_app]
     return app
@@ -208,4 +211,4 @@ if __name__ == "__main__":
 
     app = create_app(api_key=os.environ.get("GOOGLE_API_KEY"))
     # Bind to all interfaces so any device on the same network can reach it.
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)

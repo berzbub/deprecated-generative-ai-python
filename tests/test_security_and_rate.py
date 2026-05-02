@@ -142,7 +142,8 @@ class SecuritySafetySettingsTests(parameterized.TestCase):
             )
 
     def test_generate_content_raises_on_blocked_prompt(self):
-        """Accessing .text on a blocked-prompt response raises ValueError with a helpful message."""
+        """Accessing .text on a blocked-prompt response raises ValueError with a helpful message,
+        and the response's prompt_feedback indicates the block reason."""
         self.responses["generate_content"].append(
             protos.GenerateContentResponse(
                 {"prompt_feedback": {"block_reason": "SAFETY"}}
@@ -151,11 +152,18 @@ class SecuritySafetySettingsTests(parameterized.TestCase):
         model = generative_models.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content("unsafe content")
 
+        # The prompt_feedback should reflect the SAFETY block reason
+        self.assertEqual(
+            response.prompt_feedback.block_reason,
+            protos.GenerateContentResponse.PromptFeedback.BlockReason.SAFETY,
+        )
+
         with self.assertRaisesRegex(ValueError, "blocked prompt"):
             _ = response.text
 
     def test_generate_content_raises_on_candidate_safety_stop(self):
-        """Accessing .text when a candidate is stopped for safety raises ValueError."""
+        """Accessing .text when a candidate is stopped for safety raises ValueError that
+        includes finish_reason information, and the finish_reason on the candidate is SAFETY."""
         self.responses["generate_content"].append(
             protos.GenerateContentResponse(
                 {"candidates": [{"finish_reason": "SAFETY"}]}
@@ -163,6 +171,12 @@ class SecuritySafetySettingsTests(parameterized.TestCase):
         )
         model = generative_models.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content("hello")
+
+        # The candidate's finish_reason should be SAFETY
+        self.assertEqual(
+            response.candidates[0].finish_reason,
+            protos.Candidate.FinishReason.SAFETY,
+        )
 
         with self.assertRaisesRegex(ValueError, "finish_reason"):
             _ = response.text
@@ -303,7 +317,11 @@ class RateRequestOptionsTests(parameterized.TestCase):
         )
 
         forwarded_retry = self.observed_kwargs[0].get("retry")
-        self.assertEqual(str(forwarded_retry), str(retry_policy))
+        self.assertIsInstance(forwarded_retry, api_retry.Retry)
+        self.assertEqual(forwarded_retry._initial, retry_policy._initial)
+        self.assertEqual(forwarded_retry._multiplier, retry_policy._multiplier)
+        self.assertEqual(forwarded_retry._maximum, retry_policy._maximum)
+        self.assertEqual(forwarded_retry._timeout, retry_policy._timeout)
 
     def test_generate_content_forwards_timeout_and_retry_together(self):
         """generate_content should forward both timeout and retry when both are set."""
@@ -318,7 +336,9 @@ class RateRequestOptionsTests(parameterized.TestCase):
 
         kwargs = self.observed_kwargs[0]
         self.assertEqual(kwargs.get("timeout"), 45)
-        self.assertEqual(str(kwargs.get("retry")), str(retry_policy))
+        forwarded_retry = kwargs.get("retry")
+        self.assertIsInstance(forwarded_retry, api_retry.Retry)
+        self.assertEqual(forwarded_retry._timeout, retry_policy._timeout)
 
     def test_generate_content_no_request_options_sends_empty_kwargs(self):
         """generate_content with no request_options should send empty kwargs to the client."""

@@ -123,6 +123,18 @@ app = Flask(__name__)
 ai_analyzer = GeminiAIAnalyzer(project_id="your-project-id", location="us-central1")
 network_scanner = NetworkScanner()
 
+@app.route('/')
+def index():
+    """Root route showing app info and available endpoints."""
+    return jsonify({
+        "app": "Network AI Analyzer",
+        "status": "running",
+        "endpoints": {
+            "/": "App info (this page)",
+            "/api/analyze/network": "Trigger network analysis and get AI-powered security recommendations"
+        }
+    })
+
 @app.route('/api/analyze/network')
 async def analyze_network():
     """API endpoint to trigger network analysis."""
@@ -164,5 +176,9 @@ async def analyze_network():
 
 if __name__ == '__main__':
     # For local development, use a development server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = 5000
+    print(f"Starting Network AI Analyzer...")
+    print(f"Your app will be accessible at: http://localhost:{port}")
+    print(f"API endpoint: http://localhost:{port}/api/analyze/network")
+    app.run(debug=True, host='0.0.0.0', port=port)
 

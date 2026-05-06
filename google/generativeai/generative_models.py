@@ -608,7 +608,7 @@ class ChatSession:
             raise generation_types.BlockedPromptException(response.prompt_feedback)
 
         if not stream:
-            if response.candidates[0].finish_reason not in (
+            if response.candidates and response.candidates[0].finish_reason not in (
                 protos.Candidate.FinishReason.FINISH_REASON_UNSPECIFIED,
                 protos.Candidate.FinishReason.STOP,
                 protos.Candidate.FinishReason.MAX_TOKENS,
@@ -788,7 +788,12 @@ class ChatSession:
             result = self._history.pop(-2), self._history.pop()
             return result
         else:
-            result = self._last_sent, self._last_received.candidates[0].content
+            received_content = (
+                self._last_received.candidates[0].content
+                if self._last_received.candidates
+                else None
+            )
+            result = self._last_sent, received_content
             self._last_sent = None
             self._last_received = None
             return result
@@ -805,7 +810,7 @@ class ChatSession:
         if last is None:
             return self._history
 
-        if last.candidates[0].finish_reason not in (
+        if last.candidates and last.candidates[0].finish_reason not in (
             protos.Candidate.FinishReason.FINISH_REASON_UNSPECIFIED,
             protos.Candidate.FinishReason.STOP,
             protos.Candidate.FinishReason.MAX_TOKENS,
@@ -823,10 +828,13 @@ class ChatSession:
             ) from last._error
 
         sent = self._last_sent
-        received = last.candidates[0].content
-        if not received.role:
-            received.role = _MODEL_ROLE
-        self._history.extend([sent, received])
+        if last.candidates:
+            received = last.candidates[0].content
+            if not received.role:
+                received.role = _MODEL_ROLE
+            self._history.extend([sent, received])
+        else:
+            self._history.append(sent)
 
         self._last_sent = None
         self._last_received = None

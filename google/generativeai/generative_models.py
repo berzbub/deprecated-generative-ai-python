@@ -782,8 +782,13 @@ class ChatSession:
             history=list(self.history),
         )
 
-    def rewind(self) -> tuple[protos.Content, protos.Content]:
-        """Removes the last request/response pair from the chat history."""
+    def rewind(self) -> tuple[protos.Content, protos.Content | None]:
+        """Removes the last request/response pair from the chat history.
+
+        Returns a tuple of ``(last_sent, last_received)``. When the last
+        response contained no candidates (e.g. the reply was empty),
+        ``last_received`` will be ``None``.
+        """
         if self._last_received is None:
             result = self._history.pop(-2), self._history.pop()
             return result
@@ -824,17 +829,21 @@ class ChatSession:
                 "Refer to the previous exception for details. "
                 "To inspect the last response object, use `chat.last`. "
                 "To remove the last request/response `Content` objects from the chat, "
-                "call `last_send, last_received = chat.rewind()` and continue without it."
+                "call `last_sent, last_received = chat.rewind()` and continue without it."
             ) from last._error
 
         sent = self._last_sent
-        if last.candidates:
-            received = last.candidates[0].content
-            if not received.role:
-                received.role = _MODEL_ROLE
-            self._history.extend([sent, received])
-        else:
-            self._history.append(sent)
+        if not last.candidates:
+            raise generation_types.BrokenResponseError(
+                "Unable to build a coherent chat history: the response contained no candidates. "
+                "To inspect the last response object, use `chat.last`. "
+                "To remove the last request/response `Content` objects from the chat, "
+                "call `last_sent, last_received = chat.rewind()` and continue without it."
+            )
+        received = last.candidates[0].content
+        if not received.role:
+            received.role = _MODEL_ROLE
+        self._history.extend([sent, received])
 
         self._last_sent = None
         self._last_received = None

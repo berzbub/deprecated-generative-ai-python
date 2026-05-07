@@ -46,13 +46,13 @@ class BluetoothScanner:
             return []
 
 class WifiScanner:
-    """Scans for Wi-Fi camera and drone SSIDs used in rescue operations."""
+    """Scans Wi-Fi devices with configurable SSID patterns for rescue use cases."""
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-    def scan_wifi_cameras(self, interface="wlan0", ssid_patterns=None):
+    def scan_wifi_devices(self, interface="wlan0", ssid_patterns=None):
         try:
-            cameras = []
+            devices = []
             if ssid_patterns is None:
                 ssid_patterns = [
                     "cam",
@@ -74,19 +74,28 @@ class WifiScanner:
                             ssid = pkt.info.decode('utf-8', errors='ignore')
                             # Check for common camera/drone/rescue SSID patterns
                             if any(pattern in ssid.lower() for pattern in ssid_patterns):
-                                cameras.append({
+                                signal_strength = -100
+                                if pkt.haslayer(RadioTap) and hasattr(pkt[RadioTap], "dBm_AntSignal"):
+                                    signal_strength = pkt[RadioTap].dBm_AntSignal
+                                devices.append({
                                     'ssid': ssid,
                                     'bssid': pkt.addr2,
-                                    'signal_strength': -(256-ord(pkt[Dot11Beacon].network_stats().get("signal", 0)))
+                                    'signal_strength': signal_strength
                                 })
             
             # Monitor mode might be required
             sniff(iface=interface, prn=packet_handler, timeout=10)
-            return cameras
+            return devices
             
         except Exception as e:
-            self.logger.error(f"WiFi camera scan error: {str(e)}")
+            self.logger.error(f"WiFi device scan error: {str(e)}")
             return []
+
+    def scan_wifi_cameras(self, interface="wlan0"):
+        return self.scan_wifi_devices(
+            interface=interface,
+            ssid_patterns=["cam", "ipcam", "camera", "webcam"],
+        )
 
 class GeminiAIAnalyzer:
     """Uses Gemini-Pro to analyze network data and provide recommendations."""
@@ -148,7 +157,7 @@ async def analyze_network():
         # Collect data
         network_data = network_scanner.scan_network("192.168.1.0/24")
         bluetooth_data = bluetooth_scanner.scan_bluetooth_classic()
-        wifi_data = wifi_scanner.scan_wifi_cameras()
+        wifi_data = wifi_scanner.scan_wifi_devices()
         
         # Combine and format data for AI analysis
         combined_data = {

@@ -16,6 +16,7 @@ import copy
 from collections.abc import Iterable
 import datetime
 import dataclasses
+import io
 import pathlib
 import pytz
 from typing import Any, Union
@@ -446,19 +447,22 @@ class UnitTests(parameterized.TestCase):
         ],
     )
     def test_create_dataset(self, data, ik="text_input", ok="output"):
-        def _offline_urlopen(url):
+        def _mock_urlopen_with_fixtures(url):
             if hasattr(url, "full_url"):
                 url = url.full_url
 
             if str(url).lower().endswith(".json"):
-                return (HERE / "test1.json").open("rb")
+                fixture = HERE / "test1.json"
+            else:
+                fixture = HERE / "test.csv"
 
-            return (HERE / "test.csv").open("rb")
+            self.assertTrue(fixture.exists(), f"Missing test fixture: {fixture}")
+            return io.BytesIO(fixture.read_bytes())
 
         if isinstance(data, str) and "://" in data:
             with mock.patch(
                 "google.generativeai.types.model_types.urllib.request.urlopen",
-                side_effect=_offline_urlopen,
+                side_effect=_mock_urlopen_with_fixtures,
             ):
                 ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
         else:

@@ -41,10 +41,17 @@ TEST_JSON_URLS = {
     "https://storage.googleapis.com/generativeai-downloads/data/test1.json": HERE / "test1.json",
 }
 TEST_CSV_URLS = {
-    "https://storage.googleapis.com/generativeai-downloads/data/test.csv",
-    "https://docs.google.com/spreadsheets/d/1OffcVSqN6X-RYdWLGccDF3KtnKoIpS7O_9cZbicKK4A/export?format=csv",
-    "https://docs.google.com/spreadsheets/d/118LXTS3RIkS4yAO68c-cMPP4PwLFTxKYj4R43R7dU0E/export?format=csv&gid=1526779134",
+    url: HERE / "test.csv"
+    for url in (
+        "https://storage.googleapis.com/generativeai-downloads/data/test.csv",
+        "https://docs.google.com/spreadsheets/d/1OffcVSqN6X-RYdWLGccDF3KtnKoIpS7O_9cZbicKK4A/export?format=csv",
+        "https://docs.google.com/spreadsheets/d/118LXTS3RIkS4yAO68c-cMPP4PwLFTxKYj4R43R7dU0E/export?format=csv&gid=1526779134",
+    )
 }
+
+
+class _MockHTTPResponse(io.BytesIO):
+    pass
 
 
 class UnitTests(parameterized.TestCase):
@@ -476,13 +483,11 @@ class UnitTests(parameterized.TestCase):
         self.assertEqual(expect, ds)
 
     def _mock_urlopen(self, url):
-        data_path = TEST_JSON_URLS.get(url)
-        if data_path is None and url in TEST_CSV_URLS:
-            data_path = HERE / "test.csv"
+        data_path = TEST_JSON_URLS.get(url, TEST_CSV_URLS.get(url))
         if data_path is None:
             raise AssertionError(f"Unexpected URL fetched during test: {url}")
 
-        return io.BytesIO(data_path.read_bytes())
+        return _MockHTTPResponse(data_path.read_bytes())
 
     def test_mock_urlopen_uses_local_fixture(self):
         response = self._mock_urlopen("https://storage.googleapis.com/generativeai-downloads/data/test1.json")

@@ -21,6 +21,7 @@ import pathlib
 import pytz
 from typing import Any, Union
 import unittest
+import urllib.parse
 from unittest import mock
 
 from absl.testing import absltest
@@ -451,7 +452,8 @@ class UnitTests(parameterized.TestCase):
             if hasattr(url, "full_url"):
                 url = url.full_url
 
-            if str(url).lower().endswith(".json"):
+            parsed_url = urllib.parse.urlparse(str(url).lower())
+            if parsed_url.path.endswith(".json"):
                 fixture = HERE / "test1.json"
             else:
                 fixture = HERE / "test.csv"
@@ -460,7 +462,7 @@ class UnitTests(parameterized.TestCase):
                 raise FileNotFoundError(f"Missing test fixture: {fixture}")
             return io.BytesIO(fixture.read_bytes())
 
-        if isinstance(data, str) and "://" in data:
+        if isinstance(data, str) and data.startswith(("http://", "https://")):
             with mock.patch(
                 "google.generativeai.types.model_types.urllib.request.urlopen",
                 side_effect=_mock_urlopen_with_fixtures,

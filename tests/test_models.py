@@ -16,6 +16,7 @@ import copy
 from collections.abc import Iterable
 import datetime
 import dataclasses
+import io
 import pathlib
 import pytz
 from typing import Any, Union
@@ -36,6 +37,14 @@ from google.generativeai import types as genai_types
 import pandas as pd
 
 HERE = pathlib.Path(__file__).parent
+TEST_DATA_URLS = {
+    "https://storage.googleapis.com/generativeai-downloads/data/test1.json": HERE / "test1.json",
+    "https://storage.googleapis.com/generativeai-downloads/data/test.csv": HERE / "test.csv",
+    "https://docs.google.com/spreadsheets/d/1OffcVSqN6X-RYdWLGccDF3KtnKoIpS7O_9cZbicKK4A/export?format=csv": HERE
+    / "test.csv",
+    "https://docs.google.com/spreadsheets/d/118LXTS3RIkS4yAO68c-cMPP4PwLFTxKYj4R43R7dU0E/export?format=csv&gid=1526779134": HERE
+    / "test.csv",
+}
 
 
 class UnitTests(parameterized.TestCase):
@@ -446,7 +455,14 @@ class UnitTests(parameterized.TestCase):
         ],
     )
     def test_create_dataset(self, data, ik="text_input", ok="output"):
-        ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
+        if isinstance(data, str) and "://" in data:
+            with mock.patch(
+                "google.generativeai.types.model_types.urllib.request.urlopen",
+                side_effect=self._mock_urlopen,
+            ):
+                ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
+        else:
+            ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
 
         expect = protos.Dataset(
             examples=protos.TuningExamples(
@@ -458,6 +474,13 @@ class UnitTests(parameterized.TestCase):
             )
         )
         self.assertEqual(expect, ds)
+
+    def _mock_urlopen(self, url):
+        data_path = TEST_DATA_URLS.get(url)
+        if data_path is None:
+            raise AssertionError(f"Unexpected URL fetched during test: {url}")
+
+        return io.BytesIO(data_path.read_bytes())
 
     def test_get_model_called_with_request_options(self):
         self.client.get_model = unittest.mock.MagicMock()

@@ -37,6 +37,23 @@ accept your pull requests.
 1.  Title your pull request following [Conventional Commits](https://www.conventionalcommits.org/) styling.
 1.  Submit a pull request.
 
+### Legacy repository policy
+
+This repository is in legacy maintenance mode. In general, only critical bug or security fixes are accepted.
+Feature work should target the actively maintained SDK instead: [googleapis/python-genai](https://github.com/googleapis/python-genai).
+
+For exceptional update requests in this repository, maintainers use a phased **Learn / Observe / Update** process:
+
+- **Learn:** Gather evidence and assess security posture in a separate evaluation track.
+- **Observe:** Monitor safety, reliability, and regression signals before deciding to change this repository.
+- **Update:** Apply only minimal, scoped changes when all acceptance criteria are met.
+
+Acceptance criteria:
+
+- **Security:** No known critical/high vulnerabilities and acceptable data-handling guarantees.
+- **Reliability:** Stable tests, acceptable error behavior, and reproducible outcomes.
+- **Compatibility:** No breaking changes for existing users.
+
 ### Before you begin
 
 1.  [Select or create a Cloud Platform project][projects].

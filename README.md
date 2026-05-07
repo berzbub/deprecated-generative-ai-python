@@ -18,6 +18,37 @@ Thank you for building with Gemini and [let us know](https://discuss.ai.google.d
 
 We encourage all users to begin planning their migration to the [Google Generative AI SDK](https://github.com/googleapis/python-genai) to ensure continued access to the latest capabilities and support.
 
+## Legacy Update Governance (Learn / Observe / Update)
+
+For any exceptional maintenance decision in this legacy repository, use the following phased process:
+
+1. **Learn**
+   - Collect evidence in a separate evaluation track.
+   - Review candidate model or dependency changes with a focus on security posture and operational risk.
+
+2. **Observe**
+   - Monitor safety, reliability, and regression signals over time.
+   - Record outcomes and trends before considering a repository update.
+
+3. **Update (only if needed)**
+   - Proceed only when predefined acceptance criteria are met.
+   - Keep changes minimal and scoped to the identified critical need.
+
+### Acceptance criteria for any update
+
+- **Security:** No known critical/high vulnerabilities and acceptable data-handling guarantees.
+- **Reliability:** Stable test outcomes, acceptable error-rate behavior, and reproducible results.
+- **Compatibility:** No breaking changes for existing users.
+
+### Review cadence and release controls
+
+- Run periodic checkpoints to reassess new risks, capabilities, and vendor changes.
+- Document explicit "no change" outcomes when criteria are not met.
+- If an update is approved, run full validation (`python -m unittest`) and complete a security review before release.
+- Include clear rollback and communication notes for any approved update.
+
+For broader capability or platform improvements, prefer migration to the actively maintained [Google Gen AI SDK](https://github.com/googleapis/python-genai) rather than expanding this legacy codebase.
+
 <!-- 
 [START update]
 # With Gemini 2 we're launching a new SDK. See the following doc for details.

@@ -51,6 +51,8 @@ TEST_CSV_URLS = {
 
 
 class _MockHTTPResponse(io.BytesIO):
+    """Simple in-memory stand-in for the object returned by urllib.request.urlopen."""
+
     pass
 
 
@@ -483,7 +485,9 @@ class UnitTests(parameterized.TestCase):
         self.assertEqual(expect, ds)
 
     def _mock_urlopen(self, url):
-        data_path = TEST_JSON_URLS.get(url, TEST_CSV_URLS.get(url))
+        data_path = TEST_JSON_URLS.get(url)
+        if data_path is None:
+            data_path = TEST_CSV_URLS.get(url)
         if data_path is None:
             raise AssertionError(f"Unexpected URL fetched during test: {url}")
 

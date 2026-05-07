@@ -4,8 +4,8 @@
 
 * [Contributor License Agreements](#contributor-license-agreements)
 * [Contributing a patch](#contributing-a-patch)
-* [Running the tests](#running-the-tests)
-* [Releasing the library](#releasing-the-library)
+* [Development](#development)
+* [Testing](#testing)
 
 ## Contributor License Agreements
 

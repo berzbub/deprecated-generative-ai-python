@@ -456,7 +456,8 @@ class UnitTests(parameterized.TestCase):
             else:
                 fixture = HERE / "test.csv"
 
-            self.assertTrue(fixture.exists(), f"Missing test fixture: {fixture}")
+            if not fixture.exists():
+                raise FileNotFoundError(f"Missing test fixture: {fixture}")
             return io.BytesIO(fixture.read_bytes())
 
         if isinstance(data, str) and "://" in data:

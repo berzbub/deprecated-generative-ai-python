@@ -276,6 +276,149 @@ class UnitTests(parameterized.TestCase):
 
         self.client.generate_answer.assert_called_once_with(request, **request_options)
 
+    def test_make_grounding_passages_non_iterable_raises(self):
+        with self.assertRaises(TypeError):
+            answer._make_grounding_passages(42)
+
+    def test_make_generate_answer_request_both_passages_raises(self):
+        with self.assertRaises(ValueError):
+            answer._make_generate_answer_request(
+                contents=["what?"],
+                inline_passages=["passage"],
+                semantic_retriever="corpora/my-corpus",
+            )
+
+    def test_make_generate_answer_request_neither_raises(self):
+        with self.assertRaises(TypeError):
+            answer._make_generate_answer_request(
+                contents=["what?"],
+                inline_passages=None,
+                semantic_retriever=None,
+            )
+
+    def test_make_generate_answer_request_with_semantic_retriever_string(self):
+        contents = [protos.Content(parts=[protos.Part(text="What is AI?")])]
+        # Use dict form with explicit query to avoid KeyError in the source
+        req = answer._make_generate_answer_request(
+            model=DEFAULT_ANSWER_MODEL,
+            contents=contents,
+            semantic_retriever={
+                "source": "corpora/my-corpus",
+                "query": "What is AI?",
+            },
+        )
+        self.assertIsInstance(req, protos.GenerateAnswerRequest)
+        self.assertIsInstance(req.semantic_retriever, protos.SemanticRetrieverConfig)
+
+    def test_maybe_get_source_name_string(self):
+        result = answer._maybe_get_source_name("corpora/my-corpus")
+        self.assertEqual(result, "corpora/my-corpus")
+
+    def test_maybe_get_source_name_unknown_returns_none(self):
+        result = answer._maybe_get_source_name(42)
+        self.assertIsNone(result)
+
+    def test_make_generate_answer_request_with_safety_settings(self):
+        contents = [protos.Content(parts=[protos.Part(text="What is AI?")])]
+        req = answer._make_generate_answer_request(
+            model=DEFAULT_ANSWER_MODEL,
+            contents=contents,
+            inline_passages=["some passage"],
+            safety_settings={"harassment": "medium"},
+        )
+        self.assertIsInstance(req, protos.GenerateAnswerRequest)
+        self.assertNotEmpty(req.safety_settings)
+
+    def test_generate_answer_with_semantic_retriever(self):
+        a = answer.generate_answer(
+            model="models/aqa",
+            contents=[protos.Content(parts=[protos.Part(text="What is AI?")])],
+            semantic_retriever={
+                "source": "corpora/my-corpus",
+                "query": "What is AI?",
+            },
+        )
+        self.assertIsInstance(a, protos.GenerateAnswerResponse)
+
+
+class AsyncUnitTests(parameterized.TestCase):
+    def setUp(self):
+        self.client = unittest.mock.MagicMock()
+
+        # Save original state so we can restore it in tearDown
+        self._saved_clients = {
+            k: client._client_manager.clients.get(k)
+            for k in ("generative_async", "generative", "model")
+        }
+        self._saved_client_config = dict(client._client_manager.client_config)
+
+        client._client_manager.clients["generative_async"] = self.client
+        client._client_manager.clients["generative"] = self.client
+        client._client_manager.clients["model"] = self.client
+
+        self.observed_requests = []
+
+        async def generate_answer(
+            request: protos.GenerateAnswerRequest,
+            **kwargs,
+        ) -> protos.GenerateAnswerResponse:
+            self.observed_requests.append(request)
+            return protos.GenerateAnswerResponse(
+                answer=protos.Candidate(
+                    index=1,
+                    content=(protos.Content(parts=[protos.Part(text="Async answer.")])),
+                ),
+                answerable_probability=0.700,
+            )
+
+        self.client.generate_answer = generate_answer
+
+    def tearDown(self):
+        # Restore original client state
+        for key, original in self._saved_clients.items():
+            if original is None:
+                client._client_manager.clients.pop(key, None)
+            else:
+                client._client_manager.clients[key] = original
+        client._client_manager.client_config.clear()
+        client._client_manager.client_config.update(self._saved_client_config)
+        # Restore event loop: asyncio.run() removes the current event loop in Python
+        # 3.12+, which breaks subsequent gRPC async client creation.
+        import asyncio
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    def test_generate_answer_async(self):
+        import asyncio
+
+        async def run():
+            return await answer.generate_answer_async(
+                model="models/aqa",
+                contents=[protos.Content(parts=[protos.Part(text="What is AI?")])],
+                inline_passages=["some context"],
+            )
+
+        result = asyncio.run(run())
+        self.assertIsInstance(result, protos.GenerateAnswerResponse)
+        self.assertAlmostEqual(result.answerable_probability, 0.700, places=2)
+
+    def test_generate_answer_async_with_semantic_retriever(self):
+        import asyncio
+
+        async def run():
+            return await answer.generate_answer_async(
+                model="models/aqa",
+                contents=[protos.Content(parts=[protos.Part(text="What is AI?")])],
+                semantic_retriever={
+                    "source": "corpora/my-corpus",
+                    "query": "What is AI?",
+                },
+            )
+
+        result = asyncio.run(run())
+        self.assertIsInstance(result, protos.GenerateAnswerResponse)
+
 
 if __name__ == "__main__":
     absltest.main()

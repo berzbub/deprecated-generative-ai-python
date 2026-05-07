@@ -482,6 +482,16 @@ class UnitTests(parameterized.TestCase):
 
         return io.BytesIO(data_path.read_bytes())
 
+    def test_mock_urlopen_uses_local_fixture(self):
+        response = self._mock_urlopen("https://storage.googleapis.com/generativeai-downloads/data/test1.json")
+
+        with response:
+            self.assertEqual((HERE / "test1.json").read_bytes(), response.read())
+
+    def test_mock_urlopen_rejects_unknown_url(self):
+        with self.assertRaisesRegex(AssertionError, "Unexpected URL fetched during test"):
+            self._mock_urlopen("https://example.com/data.csv")
+
     def test_get_model_called_with_request_options(self):
         self.client.get_model = unittest.mock.MagicMock()
         name = unittest.mock.ANY

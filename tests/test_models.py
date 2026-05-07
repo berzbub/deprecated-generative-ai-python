@@ -446,7 +446,23 @@ class UnitTests(parameterized.TestCase):
         ],
     )
     def test_create_dataset(self, data, ik="text_input", ok="output"):
-        ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
+        def _offline_urlopen(url):
+            if hasattr(url, "full_url"):
+                url = url.full_url
+
+            if str(url).lower().endswith(".json"):
+                return (HERE / "test1.json").open("rb")
+
+            return (HERE / "test.csv").open("rb")
+
+        if isinstance(data, str) and "://" in data:
+            with mock.patch(
+                "google.generativeai.types.model_types.urllib.request.urlopen",
+                side_effect=_offline_urlopen,
+            ):
+                ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
+        else:
+            ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
 
         expect = protos.Dataset(
             examples=protos.TuningExamples(

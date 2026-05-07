@@ -452,11 +452,16 @@ class UnitTests(parameterized.TestCase):
             if hasattr(url, "full_url"):
                 url = url.full_url
 
-            parsed_url = urllib.parse.urlparse(str(url).lower())
-            if parsed_url.path.endswith(".json"):
+            parsed_url = urllib.parse.urlparse(str(url))
+            path = parsed_url.path.lower()
+            query = urllib.parse.parse_qs(parsed_url.query.lower())
+
+            if path.endswith(".json"):
                 fixture = HERE / "test1.json"
-            else:
+            elif path.endswith(".csv") or query.get("format") == ["csv"]:
                 fixture = HERE / "test.csv"
+            else:
+                raise ValueError(f"Unsupported fixture URL type for test mock: {url}")
 
             if not fixture.exists():
                 raise FileNotFoundError(f"Missing test fixture: {fixture}")

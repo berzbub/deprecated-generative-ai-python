@@ -37,13 +37,13 @@ from google.generativeai import types as genai_types
 import pandas as pd
 
 HERE = pathlib.Path(__file__).parent
-TEST_DATA_URLS = {
+TEST_JSON_URLS = {
     "https://storage.googleapis.com/generativeai-downloads/data/test1.json": HERE / "test1.json",
-    "https://storage.googleapis.com/generativeai-downloads/data/test.csv": HERE / "test.csv",
-    "https://docs.google.com/spreadsheets/d/1OffcVSqN6X-RYdWLGccDF3KtnKoIpS7O_9cZbicKK4A/export?format=csv": HERE
-    / "test.csv",
-    "https://docs.google.com/spreadsheets/d/118LXTS3RIkS4yAO68c-cMPP4PwLFTxKYj4R43R7dU0E/export?format=csv&gid=1526779134": HERE
-    / "test.csv",
+}
+TEST_CSV_URLS = {
+    "https://storage.googleapis.com/generativeai-downloads/data/test.csv",
+    "https://docs.google.com/spreadsheets/d/1OffcVSqN6X-RYdWLGccDF3KtnKoIpS7O_9cZbicKK4A/export?format=csv",
+    "https://docs.google.com/spreadsheets/d/118LXTS3RIkS4yAO68c-cMPP4PwLFTxKYj4R43R7dU0E/export?format=csv&gid=1526779134",
 }
 
 
@@ -476,7 +476,9 @@ class UnitTests(parameterized.TestCase):
         self.assertEqual(expect, ds)
 
     def _mock_urlopen(self, url):
-        data_path = TEST_DATA_URLS.get(url)
+        data_path = TEST_JSON_URLS.get(url)
+        if data_path is None and url in TEST_CSV_URLS:
+            data_path = HERE / "test.csv"
         if data_path is None:
             raise AssertionError(f"Unexpected URL fetched during test: {url}")
 

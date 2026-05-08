@@ -28,12 +28,12 @@ class UnitTests(absltest.TestCase):
         self.assertEqual("survey", app.simulation_state["application"])
 
     def test_simulation_adjustment_supports_custom_alias(self):
-        app = dji_app.create_dji_app(aircraft_alias="Jennifer")
+        app = dji_app.create_dji_app(aircraft_alias="Jennifer-Unique")
         state = app.adjust_simulation(
             application="inspection", reality="digital-twin", material="carbon-fiber"
         )
 
-        self.assertEqual("Jennifer", state["aircraft_alias"])
+        self.assertEqual("Jennifer-Unique", state["aircraft_alias"])
         self.assertEqual("digital-twin", state["reality"])
         self.assertEqual("carbon-fiber", state["material"])
 
@@ -48,6 +48,11 @@ class UnitTests(absltest.TestCase):
 
     def test_license_change_reason_is_explicit(self):
         self.assertIn("No repository license change is required", dji_app.LICENSE_CHANGE_REASON)
+
+    def test_self_adjust_rejects_out_of_range_feedback(self):
+        app = dji_app.create_dji_app()
+        with self.assertRaises(ValueError):
+            app.self_adjust(1.1)
 
 
 if __name__ == "__main__":

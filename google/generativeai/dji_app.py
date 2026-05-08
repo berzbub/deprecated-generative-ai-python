@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import dataclasses
+import math
 from typing import Any
 
 EXCLUDED_DOMINATING_FEATURES = (
@@ -43,7 +44,7 @@ class TrainingModule:
 @dataclasses.dataclass
 class DJIIntegrationApp:
     aircraft_alias: str = "Mavic Pro"
-    ai_framework: str = "preserved-ai-framework"
+    ai_framework: str = "gemini-preserved-adaptive-framework"
     excluded_features: tuple[str, ...] = EXCLUDED_DOMINATING_FEATURES
     simulation_state: dict[str, Any] = dataclasses.field(default_factory=dict)
     training_modules: list[TrainingModule] = dataclasses.field(default_factory=list)
@@ -64,6 +65,11 @@ class DJIIntegrationApp:
         return scenario
 
     def self_adjust(self, feedback_score: float) -> dict[str, Any]:
+        if not isinstance(feedback_score, (int, float)) or not math.isfinite(feedback_score):
+            raise ValueError("feedback_score must be a finite number between 0.0 and 1.0")
+        if feedback_score < 0.0 or feedback_score > 1.0:
+            raise ValueError("feedback_score must be between 0.0 and 1.0")
+
         if feedback_score < 0.5:
             adaptation = "increase-guidance"
         elif feedback_score > 0.85:

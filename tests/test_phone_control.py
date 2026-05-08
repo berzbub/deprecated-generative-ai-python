@@ -22,6 +22,10 @@ class PhoneControlTests(absltest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unsupported phone command"):
             phone_control.initiate_thermal_imaging("disable thermal imaging on my phone")
 
+    def test_initiate_thermal_imaging_invalid_separator(self):
+        with self.assertRaisesRegex(ValueError, "Unsupported phone command"):
+            phone_control.initiate_thermal_imaging("initiate thermal__imaging on my phone")
+
 
 if __name__ == "__main__":
     absltest.main()

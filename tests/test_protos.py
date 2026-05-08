@@ -42,9 +42,10 @@ class UnitTests(parameterized.TestCase):
                     msg=f"Bad `glm.` usage, use `genai.protos` instead,\n   in {fpath}",
                 )
 
-    def test_disallow_sense8_proprietary_source(self):
+    def test_disallow_proprietary_source_snippets(self):
+        this_file = pathlib.Path(__file__).resolve()
         for fpath in ROOT.rglob("*.py"):
-            if fpath == pathlib.Path(__file__):
+            if fpath.resolve() == this_file:
                 continue
             content = fpath.read_text()
             for snippet in DISALLOWED_SOURCE_SNIPPETS:

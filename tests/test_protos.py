@@ -23,9 +23,8 @@ DISALLOWED_SOURCE_SNIPPETS = (
     "Sense8PlusSovereignty",
     "Sense8Logic",
     "INTELLECTUAL PROPERTY NOTICE: SENSE 8+ NAVIGATION & MAPPING",
-    "import Foundation",
-    "import CoreLocation",
-    "import ARKit",
+    "Jose A. Castillo Sr.",
+    "Data Sovereignty active. Withholding all Sense 8+ Thermal and Signal Mapping data.",
 )
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 
 _THERMAL_IMAGING_PATTERN = re.compile(
-    r"^\s*initiate\s+thermal(?:[._]|\s+)imaging\s+on\s+my\s+phone\s*$",
+    r"^\s*initiate\s+thermal(?:\.|\s+)imaging\s+on\s+my\s+phone\s*$",
     re.IGNORECASE,
 )
 

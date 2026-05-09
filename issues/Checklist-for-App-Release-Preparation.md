@@ -24,8 +24,8 @@ This issue tracks the core requirements for a 3D, pro-style basketball game conc
 - [ ] Support unlockable superstar content that can play with or against Filipino players.
 
 #### 5) AI and Company Governance
-- [ ] Define and register AI-agent operations under DC 4D logic.
-- [ ] Define AI supervision and compliance responsibilities for Batman Sploration.
+- [ ] Define and register AI-agent operations under "DC 4D logic" (a governance framework that must be formally defined in project policy documents).
+- [ ] Define AI supervision and compliance responsibilities for Batman Sploration (or the final registered legal entity name, if different).
 - [ ] Implement auditable records for all AI-assisted licensing and governance decisions.
 
 #### 6) Licensing Expansion Strategy
@@ -34,7 +34,7 @@ This issue tracks the core requirements for a 3D, pro-style basketball game conc
 
 #### 7) Revenue Allocation Policy
 - [ ] Define revenue allocation for science and technology development.
-- [ ] Define revenue allocation for sanctuaries of faith.
+- [ ] Define revenue allocation for sanctuaries of faith (for example, eligible faith-based charitable institutions recognized by law).
 - [ ] Define reinvestment policy for the sustainability of the gaming and virtual gaming company.
 
 This checklist will be updated as legal approvals, technical milestones, and partner agreements are completed.

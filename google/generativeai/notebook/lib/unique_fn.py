@@ -35,7 +35,9 @@ def unique_fn(
       A sequence of indices indicating which entries have unique results.
 
     Notes:
-      Unhashable values are de-duplicated via equality checks.
+      Unhashable values are de-duplicated via equality checks (O(n²) in the
+      number of unhashable candidates), which is acceptable because this runs
+      across model candidates for a single prompt.
     """
     indices: list[int] = []
     seen_hashable_entries = set()

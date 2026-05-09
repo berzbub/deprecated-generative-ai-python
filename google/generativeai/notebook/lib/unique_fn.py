@@ -41,13 +41,13 @@ def unique_fn(
     for idx, row in enumerate(rows):
         value = row.result_value()
         if isinstance(value, Hashable):
-            if value in seen_hashable_entries or value in seen_unhashable_entries:
+            if value in seen_hashable_entries:
                 continue
             seen_hashable_entries.add(value)
-        elif value in seen_unhashable_entries:
-            continue
-        indices.append(idx)
-        if not isinstance(value, Hashable):
+        else:
+            if value in seen_unhashable_entries:
+                continue
             seen_unhashable_entries.append(value)
+        indices.append(idx)
 
     return indices

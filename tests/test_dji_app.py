@@ -23,6 +23,7 @@ class UnitTests(absltest.TestCase):
         app = dji_app.create_dji_app()
 
         self.assertEqual("Mavic Pro", app.aircraft_alias)
+        self.assertEqual("DJI Go 4", app.companion_app)
         self.assertIn("autonomous-target-prioritization", app.excluded_features)
         self.assertLen(app.training_modules, 1)
         self.assertEqual("survey", app.simulation_state["application"])
@@ -34,6 +35,7 @@ class UnitTests(absltest.TestCase):
         )
 
         self.assertEqual("Jennifer-Unique", state["aircraft_alias"])
+        self.assertEqual("DJI Go 4", state["companion_app"])
         self.assertEqual("digital-twin", state["reality"])
         self.assertEqual("carbon-fiber", state["material"])
 

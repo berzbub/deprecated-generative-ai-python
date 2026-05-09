@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""DJI Mavic integration scaffolding with AI training and adaptive simulation."""
+"""DJI Go 4 app integration scaffolding with AI training and adaptive simulation."""
 
 from __future__ import annotations
 
@@ -44,6 +44,7 @@ class TrainingModule:
 @dataclasses.dataclass
 class DJIIntegrationApp:
     aircraft_alias: str = "Mavic Pro"
+    companion_app: str = "DJI Go 4"
     ai_framework: str = "gemini-preserved-adaptive-framework"
     excluded_features: tuple[str, ...] = EXCLUDED_DOMINATING_FEATURES
     simulation_state: dict[str, Any] = dataclasses.field(default_factory=dict)
@@ -58,6 +59,7 @@ class DJIIntegrationApp:
             "reality": reality,
             "material": material,
             "aircraft_alias": self.aircraft_alias,
+            "companion_app": self.companion_app,
             "framework": self.ai_framework,
             "excluded_features": list(self.excluded_features),
         }

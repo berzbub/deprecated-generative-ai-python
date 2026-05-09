@@ -33,6 +33,9 @@ def unique_fn(
 
     Returns:
       A sequence of indices indicating which entries have unique results.
+
+    Notes:
+      Unhashable values are de-duplicated via equality checks.
     """
     indices: list[int] = []
     seen_hashable_entries = set()

@@ -4,13 +4,15 @@ This issue tracks the core requirements for a 3D, pro-style basketball game conc
 
 #### 1) Permissions, Rights, and Compliance
 - [ ] Secure written permission from NCAA Philippines and participating schools/teams.
-- [ ] Secure individual player permissions for likeness, name use, and in-game representation.
+- [ ] Finalize the individual player permission form/template for likeness, name use, and in-game representation.
+- [ ] Secure signed permissions from active roster players of each participating team.
+- [ ] Define and implement permission renewal/revocation tracking timelines.
 - [ ] Define retirement handling for player rights and ongoing contributor acknowledgement.
-- [ ] Document arbitration and fund-governance rules aligned with national law for fair compensation.
+- [ ] Document arbitration and fund-governance rules aligned with applicable Philippine national law for fair compensation.
 
 #### 2) Player and Contributor Welfare
 - [ ] Implement contributor acknowledgement workflow for all participating players and teams.
-- [ ] Define a rewards program (for example, season-ticket incentives) tied to contributor participation.
+- [ ] Define a rewards program with season-ticket incentives tied to contributor participation.
 - [ ] Design a pension-like long-term fund model for qualified retired contributors and their families.
 - [ ] Define safeguards to reduce dependence on manipulative sponsor arrangements.
 
@@ -24,7 +26,7 @@ This issue tracks the core requirements for a 3D, pro-style basketball game conc
 - [ ] Support unlockable superstar content that can play with or against Filipino players.
 
 #### 5) AI and Company Governance
-- [ ] Define and register AI-agent operations under a formal governance framework ([Governance Framework Name TBD], previously described as "DC 4D logic").
+- [ ] Define and register AI-agent operations under a formal governance framework explicitly identified as "DC 4D logic" (with full policy definition and scope).
 - [ ] Define AI supervision and compliance responsibilities for [Legal Entity Name TBD] (replace any working title such as "Batman Sploration" with the final registered name).
 - [ ] Implement auditable records for all AI-assisted licensing and governance decisions.
 

@@ -14,7 +14,8 @@ This issue tracks the core requirements for a 3D, pro-style basketball game conc
 - [ ] Implement contributor acknowledgement workflow for all participating players and teams.
 - [ ] Define a rewards program with season-ticket incentives tied to contributor participation.
 - [ ] Design a pension-like long-term fund model for qualified retired contributors and their families.
-- [ ] Define safeguards to reduce dependence on manipulative sponsor arrangements.
+- [ ] Define qualification criteria for "qualified retired contributors" in the pension/fund policy.
+- [ ] Define safeguards to reduce dependence on manipulative sponsor arrangements (for example, coercive exclusivity terms, unfair image-rights control, or non-transparent revenue deductions).
 
 #### 3) Core Game and Seasonal Systems
 - [ ] Build 3D gameplay systems for team-vs-team competitive matches.
@@ -26,7 +27,7 @@ This issue tracks the core requirements for a 3D, pro-style basketball game conc
 - [ ] Support unlockable superstar content that can play with or against Filipino players.
 
 #### 5) AI and Company Governance
-- [ ] Define and register AI-agent operations under a formal governance framework explicitly identified as "DC 4D logic" (Decision Cycle in 4 Dimensions: Data, Compliance, Competition, and Community), with full policy definition and scope.
+- [ ] Define and register AI-agent operations under a formal governance framework explicitly identified as "DC 4D logic" (Decision Cycle in 4 Dimensions: Data, Compliance, Competition, and Community), with full policy definition and scope in a dedicated governance document.
 - [ ] Define AI supervision and compliance responsibilities for [Legal Entity Name TBD] (replace any working title such as "Batman Sploration" with the final registered name).
 - [ ] Implement auditable records for all AI-assisted licensing and governance decisions.
 

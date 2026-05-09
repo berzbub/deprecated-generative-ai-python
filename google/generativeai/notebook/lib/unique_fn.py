@@ -15,7 +15,7 @@
 """Function for de-duping results."""
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Any, Sequence
 from google.generativeai.notebook.lib import llmfn_output_row
 
 
@@ -41,7 +41,7 @@ def unique_fn(
     """
     indices: list[int] = []
     seen_hashable_entries = set()
-    seen_unhashable_entries: list[object] = []
+    seen_unhashable_entries: list[Any] = []
     for idx, row in enumerate(rows):
         value = row.result_value()
         try:

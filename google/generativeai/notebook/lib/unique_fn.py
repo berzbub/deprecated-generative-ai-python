@@ -35,13 +35,13 @@ def unique_fn(
       A sequence of indices indicating which entries have unique results.
     """
     indices: list[int] = []
-    seen_entries = set()
+    seen_entries = []
     for idx, row in enumerate(rows):
         value = row.result_value()
         if value in seen_entries:
             continue
 
-        seen_entries.add(value)
+        seen_entries.append(value)
         indices.append(idx)
 
     return indices

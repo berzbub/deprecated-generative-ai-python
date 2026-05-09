@@ -42,6 +42,31 @@ class UniqueFntest(absltest.TestCase):
         ]
         self.assertEqual([0, 2, 5], unique_fn.unique_fn(rows))
 
+    def test_unhashable_list_results(self):
+        rows = [
+            LLMFnOutputRow(data={"list_result": ["pc", "console", "mobile"]}, result_type=list),
+            LLMFnOutputRow(data={"list_result": ["pc", "console", "mobile"]}, result_type=list),
+            LLMFnOutputRow(data={"list_result": ["pc", "console"]}, result_type=list),
+        ]
+        self.assertEqual([0, 2], unique_fn.unique_fn(rows))
+
+    def test_unhashable_dict_results(self):
+        rows = [
+            LLMFnOutputRow(
+                data={"dict_result": {"country": "US", "players": ["alice", "bob"]}},
+                result_type=dict,
+            ),
+            LLMFnOutputRow(
+                data={"dict_result": {"country": "US", "players": ["alice", "bob"]}},
+                result_type=dict,
+            ),
+            LLMFnOutputRow(
+                data={"dict_result": {"country": "JP", "players": ["alice", "bob"]}},
+                result_type=dict,
+            ),
+        ]
+        self.assertEqual([0, 2], unique_fn.unique_fn(rows))
+
 
 if __name__ == "__main__":
     absltest.main()

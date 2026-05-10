@@ -35,7 +35,9 @@ DEFAULT_CONTRIBUTORS: tuple[Contributor, ...] = (
 
 class JenniferAI:
     version = "2026.5.0"
-    contributors = list(DEFAULT_CONTRIBUTORS)
+
+    def __init__(self):
+        self.contributors = list(DEFAULT_CONTRIBUTORS)
 
     def partition_video_script(self, script: str) -> list[str]:
         parts = script.split(".")

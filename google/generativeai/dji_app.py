@@ -42,14 +42,14 @@ class TrainingModule:
 
 
 @dataclasses.dataclass
-class Advertisement:
+class SchoolAdvertisement:
     sponsor_name: str
     ad_copy: str
     product_name: str | None = None
 
 
 @dataclasses.dataclass
-class InternetRadioStation:
+class SchoolInternetRadioStation:
     station_name: str = "School of Rock"
     frequency: str = "98.3 FM"
     hosting_scope: str = "inter-school"
@@ -62,9 +62,11 @@ class DJIIntegrationApp:
     excluded_features: tuple[str, ...] = EXCLUDED_DOMINATING_FEATURES
     simulation_state: dict[str, Any] = dataclasses.field(default_factory=dict)
     training_modules: list[TrainingModule] = dataclasses.field(default_factory=list)
-    school_webpage_lock_screen: dict[str, str] = dataclasses.field(default_factory=dict)
-    advertisement_board: list[Advertisement] = dataclasses.field(default_factory=list)
-    internet_radio_station: InternetRadioStation = dataclasses.field(default_factory=InternetRadioStation)
+    school_lock_screen_config: dict[str, str] = dataclasses.field(default_factory=dict)
+    advertisement_board: list[SchoolAdvertisement] = dataclasses.field(default_factory=list)
+    internet_radio_station: SchoolInternetRadioStation = dataclasses.field(
+        default_factory=SchoolInternetRadioStation
+    )
 
     def register_training_module(self, module: TrainingModule) -> None:
         self.training_modules.append(module)
@@ -105,13 +107,13 @@ class DJIIntegrationApp:
             "greeting": greeting,
             "background_theme": background_theme,
         }
-        self.school_webpage_lock_screen = lock_screen
+        self.school_lock_screen_config = lock_screen
         return lock_screen
 
     def submit_ad_request(
         self, sponsor_name: str, ad_copy: str, product_name: str | None = None
-    ) -> Advertisement:
-        advertisement = Advertisement(
+    ) -> SchoolAdvertisement:
+        advertisement = SchoolAdvertisement(
             sponsor_name=sponsor_name, ad_copy=ad_copy, product_name=product_name
         )
         self.advertisement_board.append(advertisement)
@@ -122,11 +124,11 @@ class DJIIntegrationApp:
         frequency: str,
         station_name: str = "School of Rock",
         hosting_scope: str = "inter-school",
-    ) -> InternetRadioStation:
+    ) -> SchoolInternetRadioStation:
         if not isinstance(frequency, str) or not frequency.strip():
             raise ValueError("frequency must be a non-empty string")
 
-        station = InternetRadioStation(
+        station = SchoolInternetRadioStation(
             station_name=station_name,
             frequency=frequency,
             hosting_scope=hosting_scope,

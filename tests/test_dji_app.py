@@ -64,7 +64,8 @@ class UnitTests(absltest.TestCase):
         )
 
         self.assertEqual("North Valley School", lock_screen["school_name"])
-        self.assertEqual("sunrise-stage", app.school_webpage_lock_screen["background_theme"])
+        self.assertEqual("Welcome back, musicians!", lock_screen["greeting"])
+        self.assertEqual("sunrise-stage", app.school_lock_screen_config["background_theme"])
 
     def test_ad_requests_support_product_campaigns(self):
         app = dji_app.create_dji_app()
@@ -76,7 +77,7 @@ class UnitTests(absltest.TestCase):
         )
 
         self.assertEqual("EchoMix Junior", ad.product_name)
-        self.assertLen(app.advertisement_board, 1)
+        self.assertEqual(len(app.advertisement_board), 1)
 
     def test_internet_radio_station_supports_inter_school_hosting(self):
         app = dji_app.create_dji_app()

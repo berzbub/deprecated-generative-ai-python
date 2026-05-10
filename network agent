@@ -84,7 +84,12 @@ class GeminiAIAnalyzer:
         
     async def analyze_network_data(self, network_data):
         prompt = f"""
-        Analyze the following network data and provide insights:
+        Analyze the following school internet system data and provide:
+        1. Safety and performance enhancement opportunities.
+        2. Potential privacy breach indicators.
+        3. Evidence trails (timestamps, device IDs, and related signals) for each indicator.
+        4. Recommended containment steps for school administrators.
+        Focus on observable technical evidence and avoid naming individuals without verified proof.
         Network Devices: {network_data['devices']}
         Signal Strengths: {network_data['signals']}
         Traffic Patterns: {network_data['traffic']}
@@ -94,7 +99,11 @@ class GeminiAIAnalyzer:
 
     async def generate_security_recommendations(self, scan_results):
         prompt = f"""
-        Based on the network scan results, provide security recommendations:
+        Based on the school network scan results, provide prioritized recommendations to:
+        1. Enhance internet system safety and reliability.
+        2. Protect student and staff privacy.
+        3. Collect and preserve evidence of suspected privacy breaches for formal investigation
+           (for example: source identifiers, relevant logs, and event timelines).
         {scan_results}
         """
         response = await self.model.predict_async(prompt)
@@ -165,4 +174,3 @@ async def analyze_network():
 if __name__ == '__main__':
     # For local development, use a development server
     app.run(debug=True, host='0.0.0.0', port=5000)
-

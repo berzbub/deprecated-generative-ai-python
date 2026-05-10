@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" role="img" aria-label="Gemini Tool with Google Drive and Google Cloud">
+  <rect width="1000" height="420" fill="#848482"/>
+  <rect x="40" y="40" width="920" height="340" rx="24" fill="#2b2b2b" stroke="#ffffff" stroke-width="2"/>
+
+  <text x="500" y="95" text-anchor="middle" fill="#ffffff" font-size="38" font-family="Arial, sans-serif" font-weight="700">
+    Gemini Tool
+  </text>
+  <text x="500" y="130" text-anchor="middle" fill="#d6d6d6" font-size="20" font-family="Arial, sans-serif">
+    Simple Google Drive + Google Cloud flow
+  </text>
+
+  <rect x="110" y="175" width="230" height="150" rx="16" fill="#1a73e8"/>
+  <text x="225" y="255" text-anchor="middle" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" font-weight="700">Google Drive</text>
+
+  <rect x="385" y="175" width="230" height="150" rx="16" fill="#8e24aa"/>
+  <text x="500" y="255" text-anchor="middle" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" font-weight="700">Gemini Tool</text>
+
+  <rect x="660" y="175" width="230" height="150" rx="16" fill="#0f9d58"/>
+  <text x="775" y="255" text-anchor="middle" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" font-weight="700">Google Cloud</text>
+
+  <line x1="340" y1="250" x2="385" y2="250" stroke="#ffffff" stroke-width="4"/>
+  <polygon points="385,250 372,242 372,258" fill="#ffffff"/>
+  <line x1="615" y1="250" x2="660" y2="250" stroke="#ffffff" stroke-width="4"/>
+  <polygon points="660,250 647,242 647,258" fill="#ffffff"/>
+
+  <text x="500" y="360" text-anchor="middle" fill="#ffffff" font-size="18" font-family="Arial, sans-serif">
+    Pick file → Ask Gemini → Get answer
+  </text>
+</svg>

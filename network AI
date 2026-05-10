@@ -1,1 +1,48 @@
-gemini tool
+# Gemini Tool — Super Simple Tutorial
+
+<div style="background:#848482; padding:16px; border-radius:12px; color:white; text-align:center;">
+  <h2 style="margin:0;">Gemini Tool</h2>
+  <p style="margin:6px 0 0 0;">Google Drive + Google Cloud helper</p>
+  <img src="./tool_image.svg" alt="Gemini Tool image with battle grey background" width="520" />
+</div>
+
+## What this tool does (easy words)
+
+- It helps you read files.
+- It helps you ask Gemini questions about files.
+- It can use Google Drive files.
+- It can use Google Cloud AI services.
+
+## Before you start
+
+1. Make a Google Cloud project.
+2. Turn on billing.
+3. Turn on Vertex AI API.
+4. Make a service account key.
+5. Share your Google Drive folder with that service account email.
+
+## Tiny setup steps
+
+1. Put your key file on your computer.
+2. Set `GOOGLE_APPLICATION_CREDENTIALS` to that key file path.
+3. Add your Google Cloud project ID.
+4. Add your Google Drive folder ID.
+
+## How to use it (kindergarten style)
+
+1. **Open** the tool.
+2. **Pick** your Drive folder.
+3. **Choose** a file.
+4. **Ask** Gemini a simple question.
+5. **Read** the answer.
+6. **Save** the result.
+
+## Safety rules
+
+- Do not upload private secrets.
+- Give Drive access only to folders you need.
+- Remove access when done.
+
+## Done 🎉
+
+You now have a simple Google Drive + Google Cloud Gemini workflow.

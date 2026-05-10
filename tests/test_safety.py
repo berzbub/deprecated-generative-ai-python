@@ -52,6 +52,161 @@ class SafetyTests(parameterized.TestCase):
             protos.SafetySetting.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         )
 
+    def test_to_easy_safety_dict_none(self):
+        result = safety_types.to_easy_safety_dict(None)
+        self.assertEqual(result, {})
+
+    def test_to_easy_safety_dict_protos_safety_setting_list(self):
+        settings = [
+            protos.SafetySetting(
+                category=protos.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold=protos.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            )
+        ]
+        result = safety_types.to_easy_safety_dict(settings)
+        self.assertEqual(
+            result[protos.HarmCategory.HARM_CATEGORY_HARASSMENT],
+            protos.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        )
+
+    def test_to_easy_safety_dict_invalid_setting_raises(self):
+        with self.assertRaises(ValueError):
+            safety_types.to_easy_safety_dict([42])
+
+    def test_normalize_safety_settings_none(self):
+        result = safety_types.normalize_safety_settings(None)
+        self.assertIsNone(result)
+
+    def test_normalize_safety_settings_from_block_threshold(self):
+        result = safety_types.normalize_safety_settings("medium")
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, list)
+        # Should have one entry per harm category (excluding unspecified)
+        self.assertGreater(len(result), 0)
+        for item in result:
+            self.assertIn("category", item)
+            self.assertIn("threshold", item)
+
+    def test_normalize_safety_settings_from_mapping(self):
+        settings = {"harassment": "high"}
+        result = safety_types.normalize_safety_settings(settings)
+        self.assertIsInstance(result, list)
+        self.assertLen(result, 1)
+        self.assertEqual(result[0]["category"], protos.HarmCategory.HARM_CATEGORY_HARASSMENT)
+        self.assertEqual(
+            result[0]["threshold"], protos.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH
+        )
+
+    def test_normalize_safety_settings_from_list_of_dicts(self):
+        settings = [{"category": "dangerous", "threshold": "low"}]
+        result = safety_types.normalize_safety_settings(settings)
+        self.assertIsInstance(result, list)
+        self.assertLen(result, 1)
+        self.assertEqual(
+            result[0]["category"], protos.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
+        )
+        self.assertEqual(
+            result[0]["threshold"], protos.SafetySetting.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+        )
+
+    def test_convert_filters_to_enums(self):
+        filters = [{"reason": 1, "message": "blocked"}]
+        result = safety_types.convert_filters_to_enums(filters)
+        self.assertLen(result, 1)
+        self.assertEqual(
+            result[0]["reason"], safety_types.BlockedReason(1)
+        )
+        self.assertEqual(result[0]["message"], "blocked")
+
+    def test_convert_rating_to_enum(self):
+        rating = {"category": 7, "probability": 1}
+        result = safety_types.convert_rating_to_enum(rating)
+        self.assertEqual(result["category"], protos.HarmCategory.HARM_CATEGORY_HARASSMENT)
+        self.assertEqual(
+            result["probability"], safety_types.HarmProbability.NEGLIGIBLE
+        )
+
+    def test_convert_ratings_to_enum(self):
+        ratings = [
+            {"category": 7, "probability": 2},
+            {"category": 8, "probability": 3},
+        ]
+        result = safety_types.convert_ratings_to_enum(ratings)
+        self.assertLen(result, 2)
+        self.assertEqual(result[0]["category"], protos.HarmCategory.HARM_CATEGORY_HARASSMENT)
+        self.assertEqual(result[1]["category"], protos.HarmCategory.HARM_CATEGORY_HATE_SPEECH)
+
+    def test_convert_setting_to_enum(self):
+        setting = {"category": 7, "threshold": 2}
+        result = safety_types.convert_setting_to_enum(setting)
+        self.assertEqual(result["category"], protos.HarmCategory.HARM_CATEGORY_HARASSMENT)
+        self.assertEqual(
+            result["threshold"],
+            protos.SafetySetting.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        )
+
+    def test_convert_safety_feedback_to_enums(self):
+        feedback = [
+            {
+                "rating": {"category": 7, "probability": 2},
+                "setting": {"category": 7, "threshold": 3},
+            }
+        ]
+        result = safety_types.convert_safety_feedback_to_enums(feedback)
+        self.assertLen(result, 1)
+        self.assertEqual(
+            result[0]["rating"]["category"], protos.HarmCategory.HARM_CATEGORY_HARASSMENT
+        )
+        self.assertEqual(
+            result[0]["setting"]["category"], protos.HarmCategory.HARM_CATEGORY_HARASSMENT
+        )
+
+    def test_convert_candidate_enums(self):
+        candidates = [
+            {
+                "safety_ratings": [{"category": 7, "probability": 2}],
+                "text": "some text",
+            }
+        ]
+        result = safety_types.convert_candidate_enums(candidates)
+        self.assertLen(result, 1)
+        self.assertEqual(
+            result[0]["safety_ratings"][0]["category"],
+            protos.HarmCategory.HARM_CATEGORY_HARASSMENT,
+        )
+
+    def test_to_harm_category(self):
+        self.assertEqual(
+            safety_types.to_harm_category("harassment"),
+            protos.HarmCategory.HARM_CATEGORY_HARASSMENT,
+        )
+        self.assertEqual(
+            safety_types.to_harm_category("hate"),
+            protos.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        )
+        self.assertEqual(
+            safety_types.to_harm_category("sex"),
+            protos.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        )
+        self.assertEqual(
+            safety_types.to_harm_category("danger"),
+            protos.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        )
+
+    def test_to_block_threshold(self):
+        self.assertEqual(
+            safety_types.to_block_threshold("low"),
+            protos.SafetySetting.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+        )
+        self.assertEqual(
+            safety_types.to_block_threshold("high"),
+            protos.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        )
+        self.assertEqual(
+            safety_types.to_block_threshold("block_none"),
+            protos.SafetySetting.HarmBlockThreshold.BLOCK_NONE,
+        )
+
 
 if __name__ == "__main__":
     absltest.main()

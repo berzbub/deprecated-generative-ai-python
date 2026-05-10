@@ -276,6 +276,120 @@ class UnitTests(parameterized.TestCase):
 
         self.client.generate_answer.assert_called_once_with(request, **request_options)
 
+    def test_make_generate_answer_request_raises_with_both_sources(self):
+        with self.assertRaises(ValueError):
+            answer._make_generate_answer_request(
+                contents=["question"],
+                inline_passages=["some passage"],
+                semantic_retriever="corpora/my-corpus",
+            )
+
+    def test_make_generate_answer_request_raises_with_no_source(self):
+        with self.assertRaises(TypeError):
+            answer._make_generate_answer_request(
+                contents=["question"],
+            )
+
+    def test_make_generate_answer_request_with_answer_style(self):
+        contents = [protos.Content(parts=[protos.Part(text="question")])]
+        x = answer._make_generate_answer_request(
+            model=DEFAULT_ANSWER_MODEL,
+            contents=contents,
+            inline_passages=["passage"],
+            answer_style="VERBOSE",
+        )
+        self.assertEqual(x.answer_style, answer.AnswerStyle.VERBOSE)
+
+    def test_make_generate_answer_request_with_safety_settings(self):
+        contents = [protos.Content(parts=[protos.Part(text="question")])]
+        safety = {"dangerous": "medium"}
+        x = answer._make_generate_answer_request(
+            model=DEFAULT_ANSWER_MODEL,
+            contents=contents,
+            inline_passages=["passage"],
+            safety_settings=safety,
+        )
+        self.assertIsInstance(x, protos.GenerateAnswerRequest)
+        self.assertLen(x.safety_settings, 1)
+
+    def test_make_generate_answer_request_with_temperature(self):
+        contents = [protos.Content(parts=[protos.Part(text="question")])]
+        x = answer._make_generate_answer_request(
+            model=DEFAULT_ANSWER_MODEL,
+            contents=contents,
+            inline_passages=["passage"],
+            temperature=0.5,
+        )
+        self.assertAlmostEqual(x.temperature, 0.5)
+
+    def test_maybe_get_source_name_from_string(self):
+        result = answer._maybe_get_source_name("corpora/my-corpus")
+        self.assertEqual(result, "corpora/my-corpus")
+
+    def test_maybe_get_source_name_from_corpus_proto(self):
+        corpus = protos.Corpus(name="corpora/my-corpus")
+        result = answer._maybe_get_source_name(corpus)
+        self.assertEqual(result, "corpora/my-corpus")
+
+    def test_maybe_get_source_name_from_document_proto(self):
+        doc = protos.Document(name="corpora/my-corpus/documents/my-doc")
+        result = answer._maybe_get_source_name(doc)
+        self.assertEqual(result, "corpora/my-corpus/documents/my-doc")
+
+    def test_maybe_get_source_name_from_retriever_corpus(self):
+        import datetime
+        from google.generativeai.types import retriever_types
+
+        corpus = retriever_types.Corpus(
+            name="corpora/my-corpus",
+            display_name="My Corpus",
+            create_time=datetime.datetime(2024, 1, 1),
+            update_time=datetime.datetime(2024, 1, 1),
+        )
+        result = answer._maybe_get_source_name(corpus)
+        self.assertEqual(result, "corpora/my-corpus")
+
+    def test_maybe_get_source_name_unknown_type_returns_none(self):
+        result = answer._maybe_get_source_name(12345)
+        self.assertIsNone(result)
+
+    def test_make_semantic_retriever_config_from_proto(self):
+        src_config = protos.SemanticRetrieverConfig(source="corpora/my-corpus")
+        result = answer._make_semantic_retriever_config(src_config, "my question")
+        self.assertIs(result, src_config)
+
+    def test_make_semantic_retriever_config_from_dict_with_query_none(self):
+        query_content = protos.Content(parts=[protos.Part(text="my question")])
+        source_dict = {"source": "corpora/my-corpus", "query": None}
+        result = answer._make_semantic_retriever_config(source_dict, query_content)
+        self.assertIsInstance(result, protos.SemanticRetrieverConfig)
+        self.assertEqual(result.source, "corpora/my-corpus")
+
+    def test_make_semantic_retriever_config_from_dict_with_string_query(self):
+        source_dict = {"source": "corpora/my-corpus", "query": "what is this about?"}
+        query_content = protos.Content(parts=[protos.Part(text="fallback question")])
+        result = answer._make_semantic_retriever_config(source_dict, query_content)
+        self.assertIsInstance(result, protos.SemanticRetrieverConfig)
+
+    def test_make_semantic_retriever_config_invalid_source_raises(self):
+        with self.assertRaises(TypeError):
+            answer._make_semantic_retriever_config(12345, "question")
+
+    def test_make_grounding_passages_invalid_source_raises(self):
+        with self.assertRaises(TypeError):
+            answer._make_grounding_passages(42)
+
+    def test_generate_answer_with_semantic_retriever_request(self):
+        contents = [protos.Content(parts=[protos.Part(text="What birds can fly?")])]
+        source_dict = {"source": "corpora/my-corpus", "query": None}
+
+        a = answer.generate_answer(
+            model=DEFAULT_ANSWER_MODEL,
+            contents=contents,
+            semantic_retriever=source_dict,
+        )
+        self.assertIsInstance(a, protos.GenerateAnswerResponse)
+
 
 if __name__ == "__main__":
     absltest.main()

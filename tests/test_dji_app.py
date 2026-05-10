@@ -54,6 +54,52 @@ class UnitTests(absltest.TestCase):
         with self.assertRaises(ValueError):
             app.self_adjust(1.1)
 
+    def test_personalize_school_lock_screen(self):
+        app = dji_app.create_dji_app()
+
+        lock_screen = app.personalize_school_lock_screen(
+            school_name="North Valley School",
+            greeting="Welcome back, musicians!",
+            background_theme="sunrise-stage",
+        )
+
+        self.assertEqual("North Valley School", lock_screen["school_name"])
+        self.assertEqual("Welcome back, musicians!", lock_screen["greeting"])
+        self.assertEqual("sunrise-stage", app.school_lock_screen_config["background_theme"])
+
+    def test_ad_requests_support_product_campaigns(self):
+        app = dji_app.create_dji_app()
+
+        ad = app.submit_ad_request(
+            sponsor_name="Echo Audio",
+            ad_copy="Now offering student recording kits.",
+            product_name="EchoMix Junior",
+        )
+
+        self.assertEqual("EchoMix Junior", ad.product_name)
+        self.assertEqual(len(app.advertisement_board), 1)
+
+    def test_internet_radio_station_supports_inter_school_hosting(self):
+        app = dji_app.create_dji_app()
+
+        station = app.configure_internet_radio_station(frequency="101.7 FM")
+
+        self.assertEqual("School of Rock", station.station_name)
+        self.assertEqual("101.7 FM", station.frequency)
+        self.assertEqual("inter-school", station.hosting_scope)
+
+    def test_personalize_school_lock_screen_rejects_empty_strings(self):
+        app = dji_app.create_dji_app()
+        with self.assertRaises(ValueError):
+            app.personalize_school_lock_screen(
+                school_name="", greeting="Welcome back!", background_theme="sunrise-stage"
+            )
+
+    def test_submit_ad_request_rejects_empty_sponsor(self):
+        app = dji_app.create_dji_app()
+        with self.assertRaises(ValueError):
+            app.submit_ad_request(sponsor_name="", ad_copy="New music gear.")
+
 
 if __name__ == "__main__":
     absltest.main()

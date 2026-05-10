@@ -42,12 +42,36 @@ class TrainingModule:
 
 
 @dataclasses.dataclass
+class SchoolAdvertisement:
+    sponsor_name: str
+    ad_copy: str
+    product_name: str | None = None
+
+
+@dataclasses.dataclass
+class SchoolInternetRadioStation:
+    station_name: str = "School of Rock"
+    frequency: str = "98.3 FM"
+    hosting_scope: str = "inter-school"
+
+
+@dataclasses.dataclass
 class DJIIntegrationApp:
     aircraft_alias: str = "Mavic Pro"
     ai_framework: str = "gemini-preserved-adaptive-framework"
     excluded_features: tuple[str, ...] = EXCLUDED_DOMINATING_FEATURES
     simulation_state: dict[str, Any] = dataclasses.field(default_factory=dict)
     training_modules: list[TrainingModule] = dataclasses.field(default_factory=list)
+    school_lock_screen_config: dict[str, str] = dataclasses.field(default_factory=dict)
+    advertisement_board: list[SchoolAdvertisement] = dataclasses.field(default_factory=list)
+    internet_radio_station: SchoolInternetRadioStation = dataclasses.field(
+        default_factory=SchoolInternetRadioStation
+    )
+
+    @staticmethod
+    def _require_non_empty_string(value: str, field_name: str) -> None:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{field_name} must be a non-empty string")
 
     def register_training_module(self, module: TrainingModule) -> None:
         self.training_modules.append(module)
@@ -79,6 +103,51 @@ class DJIIntegrationApp:
         self.simulation_state["adaptation"] = adaptation
         self.simulation_state["feedback_score"] = feedback_score
         return self.simulation_state
+
+    def personalize_school_lock_screen(
+        self, school_name: str, greeting: str, background_theme: str
+    ) -> dict[str, str]:
+        self._require_non_empty_string(school_name, "school_name")
+        self._require_non_empty_string(greeting, "greeting")
+        self._require_non_empty_string(background_theme, "background_theme")
+
+        lock_screen = {
+            "school_name": school_name,
+            "greeting": greeting,
+            "background_theme": background_theme,
+        }
+        self.school_lock_screen_config = lock_screen
+        return lock_screen
+
+    def submit_ad_request(
+        self, sponsor_name: str, ad_copy: str, product_name: str | None = None
+    ) -> SchoolAdvertisement:
+        self._require_non_empty_string(sponsor_name, "sponsor_name")
+        self._require_non_empty_string(ad_copy, "ad_copy")
+        if product_name is not None:
+            self._require_non_empty_string(product_name, "product_name")
+
+        advertisement = SchoolAdvertisement(
+            sponsor_name=sponsor_name, ad_copy=ad_copy, product_name=product_name
+        )
+        self.advertisement_board.append(advertisement)
+        return advertisement
+
+    def configure_internet_radio_station(
+        self,
+        frequency: str,
+        station_name: str = "School of Rock",
+        hosting_scope: str = "inter-school",
+    ) -> SchoolInternetRadioStation:
+        self._require_non_empty_string(frequency, "frequency")
+
+        station = SchoolInternetRadioStation(
+            station_name=station_name,
+            frequency=frequency,
+            hosting_scope=hosting_scope,
+        )
+        self.internet_radio_station = station
+        return station
 
 
 def create_dji_app(aircraft_alias: str = "Mavic Pro") -> DJIIntegrationApp:

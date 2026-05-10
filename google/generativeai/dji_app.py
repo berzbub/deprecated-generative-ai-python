@@ -42,12 +42,29 @@ class TrainingModule:
 
 
 @dataclasses.dataclass
+class Advertisement:
+    sponsor_name: str
+    ad_copy: str
+    product_name: str | None = None
+
+
+@dataclasses.dataclass
+class InternetRadioStation:
+    station_name: str = "School of Rock"
+    frequency: str = "98.3 FM"
+    hosting_scope: str = "inter-school"
+
+
+@dataclasses.dataclass
 class DJIIntegrationApp:
     aircraft_alias: str = "Mavic Pro"
     ai_framework: str = "gemini-preserved-adaptive-framework"
     excluded_features: tuple[str, ...] = EXCLUDED_DOMINATING_FEATURES
     simulation_state: dict[str, Any] = dataclasses.field(default_factory=dict)
     training_modules: list[TrainingModule] = dataclasses.field(default_factory=list)
+    school_webpage_lock_screen: dict[str, str] = dataclasses.field(default_factory=dict)
+    advertisement_board: list[Advertisement] = dataclasses.field(default_factory=list)
+    internet_radio_station: InternetRadioStation = dataclasses.field(default_factory=InternetRadioStation)
 
     def register_training_module(self, module: TrainingModule) -> None:
         self.training_modules.append(module)
@@ -79,6 +96,43 @@ class DJIIntegrationApp:
         self.simulation_state["adaptation"] = adaptation
         self.simulation_state["feedback_score"] = feedback_score
         return self.simulation_state
+
+    def personalize_school_lock_screen(
+        self, school_name: str, greeting: str, background_theme: str
+    ) -> dict[str, str]:
+        lock_screen = {
+            "school_name": school_name,
+            "greeting": greeting,
+            "background_theme": background_theme,
+        }
+        self.school_webpage_lock_screen = lock_screen
+        return lock_screen
+
+    def submit_ad_request(
+        self, sponsor_name: str, ad_copy: str, product_name: str | None = None
+    ) -> Advertisement:
+        advertisement = Advertisement(
+            sponsor_name=sponsor_name, ad_copy=ad_copy, product_name=product_name
+        )
+        self.advertisement_board.append(advertisement)
+        return advertisement
+
+    def configure_internet_radio_station(
+        self,
+        frequency: str,
+        station_name: str = "School of Rock",
+        hosting_scope: str = "inter-school",
+    ) -> InternetRadioStation:
+        if not isinstance(frequency, str) or not frequency.strip():
+            raise ValueError("frequency must be a non-empty string")
+
+        station = InternetRadioStation(
+            station_name=station_name,
+            frequency=frequency,
+            hosting_scope=hosting_scope,
+        )
+        self.internet_radio_station = station
+        return station
 
 
 def create_dji_app(aircraft_alias: str = "Mavic Pro") -> DJIIntegrationApp:

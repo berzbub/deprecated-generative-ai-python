@@ -26,13 +26,16 @@ class Contributor:
     role: str
 
 
+DEFAULT_CONTRIBUTORS: tuple[Contributor, ...] = (
+    Contributor(name="Jose Prudencio Castillo Jr.", role="Lead Architect / VP Identity Formation"),
+    Contributor(name="Jennifer", role="Analytical Intelligence / Innovative Catalyst"),
+    Contributor(name="The Sebastinian Community", role="Historical & Spiritual Foundation"),
+)
+
+
 class JenniferAI:
     version = "2026.5.0"
-    contributors = [
-        Contributor(name="Jose Prudencio Castillo Jr.", role="Lead Architect / VP Identity Formation"),
-        Contributor(name="Jennifer", role="Analytical Intelligence / Innovative Catalyst"),
-        Contributor(name="The Sebastinian Community", role="Historical & Spiritual Foundation"),
-    ]
+    contributors = list(DEFAULT_CONTRIBUTORS)
 
     def partition_video_script(self, script: str) -> list[str]:
         parts = script.split(".")

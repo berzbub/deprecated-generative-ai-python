@@ -707,6 +707,268 @@ class UnitTests(parameterized.TestCase):
         actual = gd["response_schema"]
         self.assertEqual(actual, expected)
 
+    def test_to_generation_config_dict_invalid_type_raises(self):
+        with self.assertRaises(TypeError):
+            generation_types.to_generation_config_dict(42)
+
+    def test_text_property_empty_parts_unspecified_finish_reason(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [], "role": "model"},
+                            "finish_reason": "FINISH_REASON_UNSPECIFIED",
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_text_property_empty_parts_stop_finish_reason(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [], "role": "model"},
+                            "finish_reason": "STOP",
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_text_property_empty_parts_max_tokens_finish_reason(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [], "role": "model"},
+                            "finish_reason": "MAX_TOKENS",
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_text_property_empty_parts_safety_finish_reason(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [], "role": "model"},
+                            "finish_reason": "SAFETY",
+                            "safety_ratings": [
+                                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "probability": "HIGH"}
+                            ],
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError) as ctx:
+            _ = response.text
+        # Safety reason should mention safety ratings
+        self.assertIn("safety_ratings", str(ctx.exception))
+
+    def test_text_property_empty_parts_recitation_finish_reason(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [], "role": "model"},
+                            "finish_reason": "RECITATION",
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError) as ctx:
+            _ = response.text
+        self.assertIn("reciting", str(ctx.exception).lower())
+
+    def test_text_property_empty_parts_other_finish_reason(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {"parts": [], "role": "model"},
+                            "finish_reason": "OTHER",
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_text_property_empty_candidates_with_prompt_feedback(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [],
+                    "prompt_feedback": {"block_reason": "SAFETY"},
+                }
+            ),
+        )
+        with self.assertRaises(ValueError) as ctx:
+            _ = response.text
+        self.assertIn("prompt_feedback", str(ctx.exception))
+
+    def test_text_property_empty_candidates_no_prompt_feedback(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse({"candidates": []}),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_text_property_multiple_candidates(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {"content": {"parts": [{"text": "a"}]}},
+                        {"content": {"parts": [{"text": "b"}]}},
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_text_property_non_text_part_raises(self):
+        response = generation_types.GenerateContentResponse(
+            done=True,
+            iterator=None,
+            result=protos.GenerateContentResponse(
+                {
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [{"inline_data": {"mime_type": "image/png", "data": "abc="}}]
+                            }
+                        }
+                    ]
+                }
+            ),
+        )
+        with self.assertRaises(ValueError):
+            _ = response.text
+
+    def test_candidates_raises_when_not_done(self):
+        chunks = [
+            protos.GenerateContentResponse({"candidates": [{"content": {"parts": [{"text": "a"}]}}]})
+        ]
+        response = generation_types.GenerateContentResponse.from_iterator(iter(chunks))
+        with self.assertRaises(generation_types.IncompleteIterationError):
+            _ = response.candidates
+
+    def test_resolve_on_already_done_response(self):
+        raw_response = protos.GenerateContentResponse(
+            {"candidates": [{"content": {"parts": [{"text": "hello"}]}}]}
+        )
+        response = generation_types.GenerateContentResponse.from_response(raw_response)
+        # resolve() on a done response should be a no-op
+        response.resolve()
+        self.assertEqual(response.text, "hello")
+
+    def test_to_dict(self):
+        raw_response = protos.GenerateContentResponse(
+            {"candidates": [{"content": {"parts": [{"text": "hello"}]}}]}
+        )
+        response = generation_types.GenerateContentResponse.from_response(raw_response)
+        d = response.to_dict()
+        self.assertIsInstance(d, dict)
+        self.assertIn("candidates", d)
+
+    def test_usage_metadata_property(self):
+        raw_response = protos.GenerateContentResponse(
+            {
+                "candidates": [{"content": {"parts": [{"text": "hi"}]}}],
+                "usage_metadata": {"prompt_token_count": 5, "candidates_token_count": 3},
+            }
+        )
+        response = generation_types.GenerateContentResponse.from_response(raw_response)
+        usage = response.usage_metadata
+        self.assertEqual(usage.prompt_token_count, 5)
+
+    def test_model_version_property(self):
+        raw_response = protos.GenerateContentResponse(
+            {
+                "candidates": [{"content": {"parts": [{"text": "hi"}]}}],
+                "model_version": "gemini-1.5-flash-001",
+            }
+        )
+        response = generation_types.GenerateContentResponse.from_response(raw_response)
+        self.assertEqual(response.model_version, "gemini-1.5-flash-001")
+
+    def test_prompt_feedback_property(self):
+        raw_response = protos.GenerateContentResponse(
+            {
+                "candidates": [{"content": {"parts": [{"text": "hi"}]}}],
+                "prompt_feedback": {"block_reason": "SAFETY"},
+            }
+        )
+        response = generation_types.GenerateContentResponse.from_response(raw_response)
+        self.assertIsNotNone(response.prompt_feedback)
+
+    def test_blocked_prompt_raises_on_iteration(self):
+        blocked_chunk = protos.GenerateContentResponse(
+            {
+                "candidates": [],
+                "prompt_feedback": {"block_reason": "SAFETY"},
+            }
+        )
+
+        def make_iter():
+            yield blocked_chunk
+
+        response = generation_types.GenerateContentResponse.from_iterator(make_iter())
+        with self.assertRaises(generation_types.BlockedPromptException):
+            for _ in response:
+                pass
+
+    def test_iterator_exception_propagation(self):
+        def failing_iterator():
+            yield protos.GenerateContentResponse(
+                {"candidates": [{"content": {"parts": [{"text": "first"}]}}]}
+            )
+            raise RuntimeError("stream error")
+
+        response = generation_types.GenerateContentResponse.from_iterator(failing_iterator())
+        with self.assertRaises(RuntimeError):
+            for _ in response:
+                pass
+
 
 if __name__ == "__main__":
     absltest.main()

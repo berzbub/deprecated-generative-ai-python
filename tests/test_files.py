@@ -60,9 +60,13 @@ class FileServiceClient(client_lib.FileServiceClient):
 
     def get_file(
         self,
-        request: protos.GetFileRequest,
+        request: protos.GetFileRequest = None,
+        *,
+        name: str = None,
         **kwargs,
     ) -> protos.File:
+        if request is None and name is not None:
+            request = protos.GetFileRequest(name=name)
         self.observed_requests.append(request)
         return self.responses["get_file"].pop(0)
 
@@ -150,3 +154,114 @@ class UnitTests(parameterized.TestCase):
         response = genai.upload_file("test.webp")
 
         self.assertEqual("image/webp", self.observed_requests[0]["mime_type"])
+
+    def test_upload_file_io_without_mime_type_raises(self):
+        import io
+
+        buf = io.BytesIO(b"fake file content")
+        with self.assertRaises(ValueError):
+            genai.upload_file(buf)
+
+    def test_upload_file_io_with_mime_type(self):
+        import io
+
+        self.responses["create_file"].append(
+            protos.File(uri="https://test", mime_type="image/png")
+        )
+        buf = io.BytesIO(b"fake image data")
+        response = genai.upload_file(buf, mime_type="image/png")
+        self.assertEqual("image/png", self.observed_requests[0]["mime_type"])
+
+    def test_upload_file_unknown_mime_type_raises(self):
+        with self.assertRaises(ValueError):
+            genai.upload_file("test.unknownextension")
+
+    def test_upload_file_with_name_prefix(self):
+        self.responses["create_file"].append(protos.File(name="files/my-file"))
+        genai.upload_file("test.webp", name="my-file")
+        self.assertEqual("files/my-file", self.observed_requests[0]["name"])
+
+    def test_upload_file_with_full_name(self):
+        self.responses["create_file"].append(protos.File(name="files/custom-name"))
+        genai.upload_file("test.webp", name="files/custom-name")
+        self.assertEqual("files/custom-name", self.observed_requests[0]["name"])
+
+    def test_list_files(self):
+        self.responses["list_files"].append(
+            [
+                protos.File(name="files/file-1", uri="https://file1"),
+                protos.File(name="files/file-2", uri="https://file2"),
+            ]
+        )
+        files = list(genai.list_files())
+        self.assertLen(files, 2)
+        self.assertIsInstance(files[0], file_types.File)
+        self.assertEqual(files[0].name, "files/file-1")
+
+    def test_get_file_with_prefix(self):
+        self.responses["get_file"].append(
+            protos.File(name="files/my-file", uri="https://test")
+        )
+        f = genai.get_file("files/my-file")
+        self.assertIsInstance(f, file_types.File)
+        self.assertEqual(f.name, "files/my-file")
+
+    def test_get_file_without_prefix(self):
+        self.responses["get_file"].append(
+            protos.File(name="files/my-file", uri="https://test")
+        )
+        f = genai.get_file("my-file")
+        # Verify "files/" was prepended in request
+        req = self.observed_requests[0]
+        self.assertEqual(req.name, "files/my-file")
+
+    def test_delete_file_by_name_string(self):
+        genai.delete_file("files/my-file")
+        req = self.observed_requests[0]
+        self.assertEqual(req.name, "files/my-file")
+
+    def test_delete_file_by_name_without_prefix(self):
+        genai.delete_file("my-file")
+        req = self.observed_requests[0]
+        self.assertEqual(req.name, "files/my-file")
+
+    def test_delete_file_by_file_object(self):
+        f = file_types.File(protos.File(name="files/my-file"))
+        genai.delete_file(f)
+        req = self.observed_requests[0]
+        self.assertEqual(req.name, "files/my-file")
+
+    def test_delete_file_by_protos_file(self):
+        pf = protos.File(name="files/proto-file")
+        genai.delete_file(pf)
+        req = self.observed_requests[0]
+        self.assertEqual(req.name, "files/proto-file")
+
+    def test_file_properties(self):
+        f = file_types.File(
+            protos.File(
+                name="files/test",
+                display_name="Test File",
+                mime_type="image/png",
+                uri="https://test-uri",
+            )
+        )
+        self.assertEqual(f.name, "files/test")
+        self.assertEqual(f.display_name, "Test File")
+        self.assertEqual(f.mime_type, "image/png")
+        self.assertEqual(f.uri, "https://test-uri")
+
+    def test_file_str(self):
+        f = file_types.File(
+            protos.File(name="files/test", uri="https://test-uri", mime_type="image/png")
+        )
+        s = str(f)
+        self.assertIn("genai.File(", s)
+
+    def test_file_to_dict(self):
+        f = file_types.File(
+            protos.File(name="files/test", uri="https://test-uri", mime_type="image/png")
+        )
+        d = f.to_dict()
+        self.assertIsInstance(d, dict)
+        self.assertEqual(d["name"], "files/test")

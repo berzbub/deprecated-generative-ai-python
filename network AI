@@ -1,6 +1,6 @@
 # Gemini Tool — Super Simple Tutorial
 
-![Diagram showing Google Drive, Gemini Tool, and Google Cloud workflow](./tool_image.svg)
+![Workflow diagram showing data flow from Google Drive through Gemini Tool to Google Cloud with connecting arrows](./tool_image.svg)
 
 ## What this tool does
 

@@ -88,6 +88,18 @@ class UnitTests(absltest.TestCase):
         self.assertEqual("101.7 FM", station.frequency)
         self.assertEqual("inter-school", station.hosting_scope)
 
+    def test_personalize_school_lock_screen_rejects_empty_strings(self):
+        app = dji_app.create_dji_app()
+        with self.assertRaises(ValueError):
+            app.personalize_school_lock_screen(
+                school_name="", greeting="Welcome back!", background_theme="sunrise-stage"
+            )
+
+    def test_submit_ad_request_rejects_empty_sponsor(self):
+        app = dji_app.create_dji_app()
+        with self.assertRaises(ValueError):
+            app.submit_ad_request(sponsor_name="", ad_copy="New music gear.")
+
 
 if __name__ == "__main__":
     absltest.main()

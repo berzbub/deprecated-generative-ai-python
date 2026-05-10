@@ -68,6 +68,11 @@ class DJIIntegrationApp:
         default_factory=SchoolInternetRadioStation
     )
 
+    @staticmethod
+    def _require_non_empty_string(value: str, field_name: str) -> None:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{field_name} must be a non-empty string")
+
     def register_training_module(self, module: TrainingModule) -> None:
         self.training_modules.append(module)
 
@@ -102,6 +107,10 @@ class DJIIntegrationApp:
     def personalize_school_lock_screen(
         self, school_name: str, greeting: str, background_theme: str
     ) -> dict[str, str]:
+        self._require_non_empty_string(school_name, "school_name")
+        self._require_non_empty_string(greeting, "greeting")
+        self._require_non_empty_string(background_theme, "background_theme")
+
         lock_screen = {
             "school_name": school_name,
             "greeting": greeting,
@@ -113,6 +122,11 @@ class DJIIntegrationApp:
     def submit_ad_request(
         self, sponsor_name: str, ad_copy: str, product_name: str | None = None
     ) -> SchoolAdvertisement:
+        self._require_non_empty_string(sponsor_name, "sponsor_name")
+        self._require_non_empty_string(ad_copy, "ad_copy")
+        if product_name is not None:
+            self._require_non_empty_string(product_name, "product_name")
+
         advertisement = SchoolAdvertisement(
             sponsor_name=sponsor_name, ad_copy=ad_copy, product_name=product_name
         )
@@ -125,8 +139,7 @@ class DJIIntegrationApp:
         station_name: str = "School of Rock",
         hosting_scope: str = "inter-school",
     ) -> SchoolInternetRadioStation:
-        if not isinstance(frequency, str) or not frequency.strip():
-            raise ValueError("frequency must be a non-empty string")
+        self._require_non_empty_string(frequency, "frequency")
 
         station = SchoolInternetRadioStation(
             station_name=station_name,

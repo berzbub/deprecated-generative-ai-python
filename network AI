@@ -1,10 +1,6 @@
 # Gemini Tool — Super Simple Tutorial
 
-<div style="background:#848482; padding:16px; border-radius:12px; color:white; text-align:center;">
-  <h2 style="margin:0;">Gemini Tool</h2>
-  <p style="margin:6px 0 0 0;">Google Drive + Google Cloud helper</p>
-  <img src="./tool_image.svg" alt="Gemini Tool image with battleship grey background" width="520" />
-</div>
+![Gemini Tool image with battleship grey background](./tool_image.svg)
 
 ## What this tool does (easy words)
 

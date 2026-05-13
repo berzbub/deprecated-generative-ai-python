@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexa Plus – Network Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-top: 0.3rem;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #7dd3fc;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button#scan-btn {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      padding: 0.9rem;
+      background: #0ea5e9;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 1.25rem;
+    }
+
+    button#scan-btn:hover { background: #0284c7; }
+    button#scan-btn:disabled { background: #475569; cursor: not-allowed; }
+
+    #status {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    #status.error { color: #f87171; }
+    #status.loading { color: #facc15; }
+
+    pre {
+      font-size: 0.78rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📡 Alexa Plus</h1>
+    <p>Network Analyzer &amp; AI Security Advisor</p>
+  </header>
+
+  <button id="scan-btn" onclick="runScan()">Run Network Scan</button>
+  <p id="status"></p>
+
+  <div class="card hidden" id="card-analysis">
+    <h2>🤖 AI Analysis</h2>
+    <pre id="analysis-text"></pre>
+  </div>
+
+  <div class="card hidden" id="card-recommendations">
+    <h2>🔒 Security Recommendations</h2>
+    <pre id="recommendations-text"></pre>
+  </div>
+
+  <script>
+    async function runScan() {
+      const btn = document.getElementById('scan-btn');
+      const status = document.getElementById('status');
+      const cardAnalysis = document.getElementById('card-analysis');
+      const cardRec = document.getElementById('card-recommendations');
+
+      btn.disabled = true;
+      status.className = 'loading';
+      status.textContent = 'Scanning network…';
+      cardAnalysis.classList.add('hidden');
+      cardRec.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/analyze/network');
+        const data = await res.json();
+
+        if (data.success) {
+          status.className = '';
+          status.textContent = 'Scan complete ✓';
+
+          document.getElementById('analysis-text').textContent = data.analysis || '(no data)';
+          document.getElementById('recommendations-text').textContent =
+            data.security_recommendations || '(no data)';
+
+          cardAnalysis.classList.remove('hidden');
+          cardRec.classList.remove('hidden');
+        } else {
+          status.className = 'error';
+          status.textContent = 'Error: ' + (data.error || 'Unknown error');
+        }
+      } catch (err) {
+        status.className = 'error';
+        status.textContent = 'Network error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

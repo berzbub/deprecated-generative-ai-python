@@ -90,6 +90,7 @@ setuptools.setup(
     ],
     platforms="Posix; MacOS X; Windows",
     packages=packages,
+    py_modules=["gemini_app"],
     python_requires=">=3.9",
     namespace_packages=namespaces,
     install_requires=dependencies,
@@ -97,4 +98,9 @@ setuptools.setup(
     include_package_data=True,
     zip_safe=False,
     package_data={"generativeai": ["py.typed"]},
+    entry_points={
+        "console_scripts": [
+            "gemini=gemini_app:run_cli",
+        ],
+    },
 )

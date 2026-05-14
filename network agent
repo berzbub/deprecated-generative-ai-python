@@ -1,9 +1,7 @@
 import bluetooth
 from bluetooth.ble import DiscoveryService
 import logging
-from google.cloud import aiplatform
-from vertexai.language_models import TextGenerationModel
-import vertexai
+import google.generativeai as genai
 from scapy.all import *
 from flask import Flask, jsonify
 
@@ -77,27 +75,28 @@ class WifiScanner:
             return []
 
 class GeminiAIAnalyzer:
-    """Uses Gemini-Pro to analyze network data and provide recommendations."""
-    def __init__(self, project_id, location):
-        vertexai.init(project=project_id, location=location)
-        self.model = TextGenerationModel.from_pretrained("gemini-pro")
-        
-    async def analyze_network_data(self, network_data):
+    """Uses Gemini to analyze network data and provide recommendations."""
+    def __init__(self, api_key=None):
+        if api_key:
+            genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel("gemini-pro")
+
+    def analyze_network_data(self, network_data):
         prompt = f"""
         Analyze the following network data and provide insights:
         Network Devices: {network_data['devices']}
         Signal Strengths: {network_data['signals']}
         Traffic Patterns: {network_data['traffic']}
         """
-        response = await self.model.predict_async(prompt)
+        response = self.model.generate_content(prompt)
         return response.text
 
-    async def generate_security_recommendations(self, scan_results):
+    def generate_security_recommendations(self, scan_results):
         prompt = f"""
         Based on the network scan results, provide security recommendations:
         {scan_results}
         """
-        response = await self.model.predict_async(prompt)
+        response = self.model.generate_content(prompt)
         return response.text
         
 class NetworkScanner:
@@ -120,11 +119,11 @@ class NetworkScanner:
 # --- Flask Application ---
 
 app = Flask(__name__)
-ai_analyzer = GeminiAIAnalyzer(project_id="your-project-id", location="us-central1")
+ai_analyzer = GeminiAIAnalyzer()
 network_scanner = NetworkScanner()
 
 @app.route('/api/analyze/network')
-async def analyze_network():
+def analyze_network():
     """API endpoint to trigger network analysis."""
     try:
         bluetooth_scanner = BluetoothScanner()
@@ -146,10 +145,10 @@ async def analyze_network():
         }
         
         # Analyze with Gemini AI
-        analysis = await ai_analyzer.analyze_network_data(combined_data)
+        analysis = ai_analyzer.analyze_network_data(combined_data)
         
         # Generate security recommendations
-        security_recommendations = await ai_analyzer.generate_security_recommendations(analysis)
+        security_recommendations = ai_analyzer.generate_security_recommendations(analysis)
         
         return jsonify({
             "success": True,
@@ -160,9 +159,47 @@ async def analyze_network():
         logging.error(f"API endpoint error: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+
+def run_analyze():
+    """Run network analysis directly and print results."""
+    bluetooth_scanner = BluetoothScanner()
+    wifi_scanner = WifiScanner()
+
+    # Collect data
+    network_data = network_scanner.scan_network("192.168.1.0/24")
+    bluetooth_data = bluetooth_scanner.scan_bluetooth_classic()
+    wifi_data = wifi_scanner.scan_wifi_cameras()
+
+    # Combine and format data for AI analysis
+    combined_data = {
+        'devices': network_data,
+        'signals': {
+            'bluetooth': bluetooth_data,
+            'wifi_cameras': wifi_data
+        },
+        'traffic': {}  # Placeholder for traffic patterns
+    }
+
+    # Analyze with Gemini AI
+    analysis = ai_analyzer.analyze_network_data(combined_data)
+
+    # Generate security recommendations
+    security_recommendations = ai_analyzer.generate_security_recommendations(analysis)
+
+    print("=== Network Analysis ===")
+    print(analysis)
+    print("\n=== Security Recommendations ===")
+    print(security_recommendations)
+    return {"analysis": analysis, "security_recommendations": security_recommendations}
+
+
 # --- Main Entry Point ---
 
 if __name__ == '__main__':
-    # For local development, use a development server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'analyze':
+        run_analyze()
+    else:
+        # For local development, use a development server
+        app.run(debug=True, host='0.0.0.0', port=5000)
 

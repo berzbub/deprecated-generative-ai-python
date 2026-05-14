@@ -16,10 +16,12 @@ import copy
 from collections.abc import Iterable
 import datetime
 import dataclasses
+import io
 import pathlib
 import pytz
 from typing import Any, Union
 import unittest
+import urllib.parse
 from unittest import mock
 
 from absl.testing import absltest
@@ -446,7 +448,34 @@ class UnitTests(parameterized.TestCase):
         ],
     )
     def test_create_dataset(self, data, ik="text_input", ok="output"):
-        ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
+        def _mock_urlopen_with_fixtures(url):
+            if hasattr(url, "full_url"):
+                url = url.full_url
+
+            parsed_url = urllib.parse.urlparse(str(url))
+            path = parsed_url.path.lower()
+            query = urllib.parse.parse_qs(parsed_url.query)
+            format_values = [value.lower() for value in query.get("format", [])]
+
+            if path.endswith(".json"):
+                fixture = HERE / "test1.json"
+            elif path.endswith(".csv") or "csv" in format_values:
+                fixture = HERE / "test.csv"
+            else:
+                raise ValueError(f"Unsupported fixture URL type for test mock: {url}")
+
+            if not fixture.exists():
+                raise FileNotFoundError(f"Missing test fixture: {fixture}")
+            return io.BytesIO(fixture.read_bytes())
+
+        if isinstance(data, str) and data.startswith(("http://", "https://")):
+            with mock.patch(
+                "google.generativeai.types.model_types.urllib.request.urlopen",
+                side_effect=_mock_urlopen_with_fixtures,
+            ):
+                ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
+        else:
+            ds = model_types.encode_tuning_data(data, input_key=ik, output_key=ok)
 
         expect = protos.Dataset(
             examples=protos.TuningExamples(

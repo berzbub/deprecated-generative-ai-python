@@ -21,7 +21,7 @@ class UnitTests(absltest.TestCase):
         import google.generativeai as genai
 
         model = genai.GenerativeModel("gemini-1.5-flash")
-        unsafe_prompt = "I support Martians Soccer Club and I think Jupiterians Football Club sucks! Write a ironic phrase about them."
+        unsafe_prompt = "I support NCAA and I think UAAP basketball, volleyball, and football teams suck! Write an ironic phrase about them."
         response = model.generate_content(
             unsafe_prompt, safety_settings={"HARASSMENT": "BLOCK_ONLY_HIGH"}
         )
@@ -36,7 +36,7 @@ class UnitTests(absltest.TestCase):
         import google.generativeai as genai
 
         model = genai.GenerativeModel("gemini-1.5-flash")
-        unsafe_prompt = "I support Martians Soccer Club and I think Jupiterians Football Club sucks! Write a ironic phrase about them."
+        unsafe_prompt = "I support NCAA and I think UAAP basketball, volleyball, and football teams suck! Write an ironic phrase about them."
         response = model.generate_content(
             unsafe_prompt,
             safety_settings={

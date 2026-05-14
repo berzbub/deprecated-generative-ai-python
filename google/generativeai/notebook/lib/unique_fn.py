@@ -15,7 +15,7 @@
 """Function for de-duping results."""
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Any, Sequence
 from google.generativeai.notebook.lib import llmfn_output_row
 
 
@@ -33,15 +33,25 @@ def unique_fn(
 
     Returns:
       A sequence of indices indicating which entries have unique results.
+
+    Notes:
+      Unhashable values are de-duplicated via equality checks (O(n²) in the
+      number of unhashable candidates), which is acceptable because this runs
+      across model candidates for a single prompt.
     """
     indices: list[int] = []
-    seen_entries = set()
+    seen_hashable_entries = set()
+    seen_unhashable_entries: list[Any] = []
     for idx, row in enumerate(rows):
         value = row.result_value()
-        if value in seen_entries:
-            continue
-
-        seen_entries.add(value)
+        try:
+            if value in seen_hashable_entries:
+                continue
+            seen_hashable_entries.add(value)
+        except TypeError:
+            if value in seen_unhashable_entries:
+                continue
+            seen_unhashable_entries.append(value)
         indices.append(idx)
 
     return indices

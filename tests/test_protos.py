@@ -19,6 +19,13 @@ from absl.testing import absltest
 from absl.testing import parameterized
 
 ROOT = pathlib.Path(__file__).parent.parent
+DISALLOWED_SOURCE_SNIPPETS = (
+    "Sense8PlusSovereignty",
+    "Sense8Logic",
+    "INTELLECTUAL PROPERTY NOTICE: SENSE 8+ NAVIGATION & MAPPING",
+    "Jose A. Castillo Sr.",
+    "Data Sovereignty active. Withholding all Sense 8+ Thermal and Signal Mapping data.",
+)
 
 
 class UnitTests(parameterized.TestCase):
@@ -27,12 +34,26 @@ class UnitTests(parameterized.TestCase):
             if fpath.name == "build_docs.py":
                 continue
             content = fpath.read_text()
-            for match in re.findall("glm\.\w+", content):
+            for match in re.findall(r"glm\.\w+", content):
                 self.assertIn(
                     "Client",
                     match,
                     msg=f"Bad `glm.` usage, use `genai.protos` instead,\n   in {fpath}",
                 )
+
+    def test_disallow_proprietary_source_snippets(self):
+        this_file = pathlib.Path(__file__).resolve()
+        for fpath in ROOT.rglob("*.py"):
+            if fpath.resolve() == this_file:
+                continue
+            content = fpath.read_text()
+            for snippet in DISALLOWED_SOURCE_SNIPPETS:
+                with self.subTest(file=fpath, snippet=snippet):
+                    self.assertNotIn(
+                        snippet,
+                        content,
+                        msg=f"Disallowed proprietary or non-Python source snippet found in {fpath}",
+                    )
 
 
 if __name__ == "__main__":

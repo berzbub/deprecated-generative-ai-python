@@ -1,9 +1,7 @@
 import bluetooth
 from bluetooth.ble import DiscoveryService
 import logging
-from google.cloud import aiplatform
-from vertexai.language_models import TextGenerationModel
-import vertexai
+import google.generativeai as genai
 from scapy.all import *
 from flask import Flask, jsonify
 
@@ -78,10 +76,10 @@ class WifiScanner:
 
 class GeminiAIAnalyzer:
     """Uses Gemini-Pro to analyze network data and provide recommendations."""
-    def __init__(self, project_id, location):
-        vertexai.init(project=project_id, location=location)
-        self.model = TextGenerationModel.from_pretrained("gemini-pro")
-        
+    def __init__(self, api_key):
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel("gemini-pro")
+
     async def analyze_network_data(self, network_data):
         prompt = f"""
         Analyze the following network data and provide insights:
@@ -89,7 +87,7 @@ class GeminiAIAnalyzer:
         Signal Strengths: {network_data['signals']}
         Traffic Patterns: {network_data['traffic']}
         """
-        response = await self.model.predict_async(prompt)
+        response = await self.model.generate_content_async(prompt)
         return response.text
 
     async def generate_security_recommendations(self, scan_results):
@@ -97,7 +95,7 @@ class GeminiAIAnalyzer:
         Based on the network scan results, provide security recommendations:
         {scan_results}
         """
-        response = await self.model.predict_async(prompt)
+        response = await self.model.generate_content_async(prompt)
         return response.text
         
 class NetworkScanner:
@@ -120,7 +118,7 @@ class NetworkScanner:
 # --- Flask Application ---
 
 app = Flask(__name__)
-ai_analyzer = GeminiAIAnalyzer(project_id="your-project-id", location="us-central1")
+ai_analyzer = GeminiAIAnalyzer(api_key="YOUR_API_KEY")
 network_scanner = NetworkScanner()
 
 @app.route('/api/analyze/network')
